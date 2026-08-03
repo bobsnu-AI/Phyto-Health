@@ -94,17 +94,20 @@ def extract_graph_entities(paper: dict, openai_client: OpenAI) -> dict:
         response = openai_client.chat.completions.create(
             model="gpt-5-mini",
             messages=[
-                {"role": "system", "content": "생의학 엔티티 추출 전문가. 반드시 유효한 JSON만 반환."},
+                {"role": "system", "content": "You are a biomedical entity extraction expert. Return ONLY valid JSON, no explanation."},
                 {"role": "user", "content": EXTRACTION_PROMPT + text[:3000]}
             ],
-            temperature=0.1,
-            max_tokens=1500
+            temperature=0.1
+            # ⚠️ max_tokens 제거 — Genspark 프록시에서 빈 응답 유발
         )
         
         content = response.choices[0].message.content
+        finish_reason = response.choices[0].finish_reason
         if not content:
+            print(f"  ⚠ PMID:{paper.get('pmid')} 빈 응답 finish_reason={finish_reason}")
             return {"entities": [], "relations": []}
         content = content.strip()
+        print(f"  → PMID:{paper.get('pmid')} {len(content)}chars finish={finish_reason} preview={content[:60]!r}")
         
         # JSON 추출 (마크다운 코드블록 제거)
         if "```json" in content:
