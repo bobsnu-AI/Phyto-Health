@@ -68,14 +68,19 @@ def search_europepmc(query: str, max_results: int = 100,
     - SRC:MED, HAS_ABSTRACT:Y 필터를 쿼리에 추가하면 API가 {'version':'6.9'} 만 반환
     - 해결: 쿼리는 단순하게 유지하고, 결과를 클라이언트에서 pmid/abstract 유무로 필터링
     """
-    # ✅ 단순 쿼리 유지 (SRC:MED, HAS_ABSTRACT 필터 제거)
+    # ✅ PUB_TYPE 필터: 단순 키워드 추가 대신 Europe PMC 공식 구문 사용
+    # " meta-analysis" 키워드 방식 → PUB_TYPE:"meta-analysis" 로 정확히 511건 필터링
     epmc_query = query
     if meta_only or pub_type == "Meta-Analysis":
-        epmc_query += " meta-analysis"
+        epmc_query += ' AND PUB_TYPE:"meta-analysis"'
     elif pub_type == "Systematic Review":
-        epmc_query += " systematic review"
+        epmc_query += ' AND PUB_TYPE:"systematic review"'
     elif pub_type == "Review":
-        epmc_query += " review"
+        epmc_query += ' AND PUB_TYPE:review'
+    elif pub_type == "Randomized Controlled Trial":
+        epmc_query += ' AND PUB_TYPE:"randomized controlled trial"'
+    elif pub_type == "Clinical Trial":
+        epmc_query += ' AND PUB_TYPE:"clinical trial"'
 
     print(f"[EPMC] 최종 쿼리: {epmc_query!r}")
 
@@ -223,6 +228,26 @@ def enrich_with_abstracts(papers: list) -> list:
                         if isinstance(mh, dict):
                             mesh_terms.append(mh.get("descriptorName", ""))
                     paper["mesh_terms"] = [m for m in mesh_terms if m]
+
+                    # ✅ pubType 보강 — lite 모드에서 누락된 pub_type 플래그 업데이트
+                    # article API는 pubTypeList 딕셔너리가 아닌 pubType 세미콜론 구분 문자열로 반환
+                    # 예: "meta-analysis; systematic review; journal article"
+                    pub_type_str = article.get("pubType", "") or ""
+                    if not pub_type_str:
+                        # pubTypeList 구조도 폴백으로 시도
+                        pt_raw = article.get("pubTypeList", {})
+                        if isinstance(pt_raw, dict):
+                            ptl = pt_raw.get("pubType", [])
+                            if isinstance(ptl, str):
+                                pub_type_str = ptl
+                            elif isinstance(ptl, list):
+                                pub_type_str = "; ".join(ptl)
+                    if pub_type_str:
+                        pub_types = [pt.strip().lower() for pt in pub_type_str.split(";") if pt.strip()]
+                        paper["pub_types"] = pub_types
+                        paper["is_meta_analysis"] = any("meta-analysis" in pt for pt in pub_types)
+                        paper["is_systematic_review"] = any("systematic" in pt for pt in pub_types)
+                        print(f"  → PMID:{pmid} pub_types={pub_types} | meta={paper['is_meta_analysis']}")
 
             # 방법 2: abstract 없으면 search API로 재조회 (pmid 직접 검색)
             if not abstract or len(abstract) < 50:
