@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+data/abstracts/
+data/chroma_db/
+data/graph/
+logs/
+*.log
+.wrangler/
+node_modules/

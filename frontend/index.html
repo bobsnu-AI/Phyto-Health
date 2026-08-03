@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhytoGraph — 파이토케미컬 연구 플랫폼</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #16a34a;
+      --primary-dark: #15803d;
+      --accent: #0ea5e9;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+    /* ── 헤더 ── */
+    header { background: linear-gradient(135deg, #064e3b 0%, #0f172a 60%); border-bottom: 1px solid #065f46; padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
+    .header-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .logo { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; font-weight: 700; color: #34d399; }
+    .logo i { font-size: 1.5rem; }
+    .api-key-area { display: flex; align-items: center; gap: 8px; }
+    .api-key-area input { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; width: 220px; }
+    .api-key-area input:focus { outline: 2px solid var(--primary); }
+    .badge-key { font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+    .badge-key.ok { background: #065f46; color: #34d399; }
+    .badge-key.no { background: #7f1d1d; color: #fca5a5; }
+
+    /* ── 탭 네비 ── */
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .nav-inner { max-width: 1400px; margin: 0 auto; display: flex; gap: 0; overflow-x: auto; }
+    .tab-btn { padding: 14px 24px; font-size: 0.9rem; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--text-muted); white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .tab-btn.active { color: #34d399; border-bottom-color: #34d399; background: rgba(52,211,153,0.07); }
+    .tab-btn i { margin-right: 6px; }
+
+    /* ── 메인 레이아웃 ── */
+    main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── 카드 ── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card-title { font-size: 1rem; font-weight: 700; color: #34d399; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+
+    /* ── 버튼 ── */
+    .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 0.9rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { background: var(--surface2); color: var(--text); }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-accent { background: #0284c7; color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+    /* ── 폼 요소 ── */
+    .input, .select { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; }
+    .input:focus, .select:focus { outline: 2px solid var(--primary); }
+    .select option { background: var(--surface); }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; }
+    .checkbox-row input { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+
+    /* ── 프로그레스 ── */
+    .progress-wrap { background: #0f172a; border-radius: 8px; overflow: hidden; height: 8px; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, #16a34a, #34d399); transition: width 0.4s; }
+    .status-msg { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+
+    /* ── 논문 카드 ── */
+    .paper-card { background: #0f172a; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem; transition: border-color 0.2s; }
+    .paper-card:hover { border-color: #16a34a; }
+    .paper-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; line-height: 1.4; }
+    .paper-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; color: var(--text-muted); }
+    .badge { padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+    .badge-meta { background: #1e40af; color: #93c5fd; }
+    .badge-sr { background: #5b21b6; color: #c4b5fd; }
+    .badge-year { background: var(--surface2); color: var(--text-muted); }
+    .paper-abstract { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* ── 그래프 ── */
+    #graph-container { background: #0a0f1e; border: 1px solid var(--border); border-radius: 12px; width: 100%; height: 600px; position: relative; overflow: hidden; }
+    #graph-svg { width: 100%; height: 100%; }
+    .node circle { cursor: pointer; transition: r 0.2s; }
+    .node:hover circle { filter: brightness(1.4); }
+    .node text { font-size: 11px; fill: #e2e8f0; pointer-events: none; text-shadow: 0 1px 3px #000; }
+    .link { stroke-opacity: 0.6; }
+    .link-label { font-size: 9px; fill: #94a3b8; }
+    
+    .graph-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    
+    .graph-tooltip { position: absolute; background: rgba(15,23,42,0.95); border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; pointer-events: none; max-width: 260px; z-index: 50; display: none; line-height: 1.5; }
+
+    /* ── 챗봇 ── */
+    #chat-messages { height: 450px; overflow-y: auto; padding: 1rem; background: #0a0f1e; border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+    .msg-bubble { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.875rem; line-height: 1.6; }
+    .msg-user { background: #164e63; color: #e0f2fe; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg-bot { background: var(--surface); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+    .msg-sources { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+    .source-link { color: #34d399; text-decoration: none; }
+    .source-link:hover { text-decoration: underline; }
+    .msg-thinking { align-self: flex-start; padding: 10px 16px; }
+    .dots span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #34d399; margin: 0 2px; animation: bounce 1.2s infinite; }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+
+    .chat-input-area { display: flex; gap: 10px; margin-top: 12px; }
+    .chat-input { flex: 1; background: #0f172a; border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 12px 16px; font-size: 0.9rem; resize: none; }
+    .chat-input:focus { outline: 2px solid var(--primary); }
+
+    /* ── 통계 카드 ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+    .stat-card { background: #0f172a; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: #34d399; }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── 토스트 ── */
+    #toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 12px 20px; font-size: 0.875rem; z-index: 999; opacity: 0; transform: translateY(20px); transition: all 0.3s; pointer-events: none; }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { border-color: #16a34a; color: #34d399; }
+    #toast.error { border-color: #dc2626; color: #fca5a5; }
+
+    /* ── 페이지네이션 ── */
+    .pagination { display: flex; gap: 6px; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+    .page-btn { padding: 6px 12px; border-radius: 6px; background: var(--surface2); color: var(--text-muted); border: none; cursor: pointer; font-size: 0.8rem; }
+    .page-btn.active { background: var(--primary); color: white; }
+    .page-btn:hover:not(.active) { background: #475569; }
+
+    /* ── 반응형 ── */
+    @media (max-width: 768px) {
+      main { padding: 1rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      #graph-container { height: 400px; }
+      #chat-messages { height: 350px; }
+    }
+
+    /* ── 스크롤바 ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* ── 빈 상태 ── */
+    .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* ── 로딩 스피너 ── */
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #ffffff40; border-top-color: #34d399; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 검색창 ── */
+    .search-bar { display: flex; gap: 8px; margin-bottom: 1rem; }
+    .search-bar input { flex: 1; }
+
+    /* ── 섹션 헤더 ── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .section-title { font-size: 1.1rem; font-weight: 700; }
+    .count-badge { background: var(--surface2); border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <i class="fas fa-dna"></i>
+      <div>
+        <span>PhytoGraph</span>
+        <div style="font-size:0.65rem;color:#6ee7b7;font-weight:400">파이토케미컬 연구 인텔리전스 플랫폼</div>
+      </div>
+    </div>
+    <div class="api-key-area">
+      <i class="fas fa-key" style="color:#94a3b8;font-size:0.85rem"></i>
+      <input type="password" id="apiKeyInput" placeholder="OpenAI API Key (sk-...)" oninput="handleApiKeyInput()">
+      <span class="badge-key no" id="apiKeyBadge">미설정</span>
+    </div>
+  </div>
+</header>
+
+<!-- 탭 네비게이션 -->
+<nav>
+  <div class="nav-inner">
+    <button class="tab-btn active" onclick="switchTab('crawl')">
+      <i class="fas fa-satellite-dish"></i> 실시간 크롤링
+    </button>
+    <button class="tab-btn" onclick="switchTab('papers')">
+      <i class="fas fa-file-medical-alt"></i> 논문 데이터베이스
+    </button>
+    <button class="tab-btn" onclick="switchTab('graph')">
+      <i class="fas fa-project-diagram"></i> 지식 그래프
+    </button>
+    <button class="tab-btn" onclick="switchTab('chatbot')">
+      <i class="fas fa-robot"></i> AI 연구 어시스턴트
+    </button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════
+     탭 1: 실시간 크롤링
+═══════════════════════════════════════════════════ -->
+<div id="tab-crawl" class="tab-panel active">
+
+  <!-- 통계 요약 -->
+  <div class="stat-grid" style="margin-bottom:1.5rem" id="statsGrid">
+    <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">수집된 총 논문</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-meta">0</div><div class="stat-label">메타분석 논문</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-graph-nodes">0</div><div class="stat-label">그래프 노드</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-graph-edges">0</div><div class="stat-label">관계 엣지</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-indexed">0</div><div class="stat-label">인덱싱 완료</div></div>
+  </div>
+
+  <!-- 크롤링 설정 -->
+  <div class="card">
+    <div class="card-title"><i class="fas fa-search"></i> PubMed 크롤링 설정</div>
+    
+    <div class="form-row" style="margin-bottom:1rem">
+      <div>
+        <label>파이토케미컬 (직접 입력 또는 선택)</label>
+        <input class="input" id="phytoInput" placeholder="예: curcumin, quercetin, resveratrol...">
+      </div>
+      <div>
+        <label>빠른 선택</label>
+        <select class="select" id="phytoSelect" onchange="document.getElementById('phytoInput').value=this.value">
+          <option value="">— 목록에서 선택 —</option>
+          <optgroup label="Polyphenols">
+            <option>curcumin</option><option>quercetin</option><option>resveratrol</option>
+            <option>EGCG</option><option>anthocyanins</option><option>kaempferol</option>
+          </optgroup>
+          <optgroup label="Carotenoids">
+            <option>lycopene</option><option>beta-carotene</option><option>lutein</option><option>zeaxanthin</option>
+          </optgroup>
+          <optgroup label="Glucosinolates">
+            <option>sulforaphane</option><option>indole-3-carbinol</option>
+          </optgroup>
+          <optgroup label="Alkaloids">
+            <option>berberine</option><option>capsaicin</option><option>piperine</option>
+          </optgroup>
+          <optgroup label="Isoflavones">
+            <option>genistein</option><option>daidzein</option>
+          </optgroup>
+          <optgroup label="Organosulfur">
+            <option>allicin</option><option>sulforaphane</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row" style="margin-bottom:1rem">
+      <div>
+        <label>건강 조건 (선택사항)</label>
+        <select class="select" id="healthSelect">
+          <option value="">— 모든 건강 조건 —</option>
+          <option>cancer</option><option>cardiovascular disease</option>
+          <option>diabetes</option><option>obesity</option>
+          <option>inflammation</option><option>oxidative stress</option>
+          <option>gut microbiota</option><option>cognitive function</option>
+          <option>aging</option><option>immune function</option>
+          <option>hypertension</option><option>liver disease</option>
+          <option>metabolic syndrome</option>
+        </select>
+      </div>
+      <div>
+        <label>논문 타입</label>
+        <select class="select" id="pubTypeSelect">
+          <option value="">— 모든 타입 —</option>
+          <option value="Meta-Analysis">메타분석 (Meta-Analysis)</option>
+          <option value="Systematic Review">체계적 리뷰 (Systematic Review)</option>
+          <option value="Randomized Controlled Trial">무작위 대조시험 (RCT)</option>
+          <option value="Review">리뷰 (Review)</option>
+          <option value="Clinical Trial">임상시험 (Clinical Trial)</option>
+        </select>
+      </div>
+      <div>
+        <label>최대 수집 논문 수</label>
+        <select class="select" id="maxResultsSelect">
+          <option value="20">20편</option>
+          <option value="50" selected>50편</option>
+          <option value="100">100편</option>
+          <option value="200">200편</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="startCrawl()" id="crawlBtn">
+        <i class="fas fa-satellite-dish"></i> 크롤링 시작
+      </button>
+      <span class="checkbox-row">
+        <input type="checkbox" id="metaOnlyCheck">
+        <label for="metaOnlyCheck" style="margin:0;cursor:pointer">메타분석 논문만</label>
+      </span>
+    </div>
+
+    <!-- 진행 상황 -->
+    <div id="crawlProgress" style="display:none;margin-top:1.5rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:6px">
+        <span id="crawlStatusText">준비 중...</span>
+        <span id="crawlPercent" style="color:#34d399">0%</span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="crawlProgressBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 크롤링 결과 미리보기 -->
+  <div class="card" id="crawlResultCard" style="display:none">
+    <div class="card-title"><i class="fas fa-check-circle"></i> 크롤링 결과</div>
+    <div class="stat-grid" style="margin-bottom:1rem">
+      <div class="stat-card"><div class="stat-num" id="res-total">0</div><div class="stat-label">수집된 논문</div></div>
+      <div class="stat-card"><div class="stat-num" id="res-meta">0</div><div class="stat-label">메타분석</div></div>
+      <div class="stat-card"><div class="stat-num" id="res-new">0</div><div class="stat-label">신규 논문</div></div>
+    </div>
+    <div id="crawlPreviewList"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem">
+      <button class="btn btn-accent btn-sm" onclick="switchTab('papers')">
+        <i class="fas fa-list"></i> 전체 논문 보기
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="autoIndexAndBuild()">
+        <i class="fas fa-magic"></i> 자동 인덱싱 + 그래프 구축
+      </button>
+    </div>
+  </div>
+
+  <!-- 워크플로우 가이드 -->
+  <div class="card">
+    <div class="card-title"><i class="fas fa-route"></i> 연구 워크플로우</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+      <div style="text-align:center;padding:1rem">
+        <div style="width:48px;height:48px;border-radius:50%;background:#065f46;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.2rem">①</div>
+        <div style="font-weight:600;margin-bottom:4px;font-size:0.9rem">PubMed 크롤링</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">파이토케미컬 입력 후 논문 수집</div>
+      </div>
+      <div style="text-align:center;padding:1rem">
+        <div style="width:48px;height:48px;border-radius:50%;background:#1e3a5f;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.2rem">②</div>
+        <div style="font-weight:600;margin-bottom:4px;font-size:0.9rem">RAG 인덱싱</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">논문을 벡터DB에 임베딩</div>
+      </div>
+      <div style="text-align:center;padding:1rem">
+        <div style="width:48px;height:48px;border-radius:50%;background:#3b1f5e;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.2rem">③</div>
+        <div style="font-weight:600;margin-bottom:4px;font-size:0.9rem">그래프 구축</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">LLM으로 지식 그래프 자동 생성</div>
+      </div>
+      <div style="text-align:center;padding:1rem">
+        <div style="width:48px;height:48px;border-radius:50%;background:#1a3a2a;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.2rem">④</div>
+        <div style="font-weight:600;margin-bottom:4px;font-size:0.9rem">AI 챗봇</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">RAG 기반 논문 Q&A</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     탭 2: 논문 데이터베이스
+═══════════════════════════════════════════════════ -->
+<div id="tab-papers" class="tab-panel">
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:1rem">
+      <div class="card-title" style="margin:0"><i class="fas fa-database"></i> 수집된 논문 목록</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <label class="checkbox-row">
+          <input type="checkbox" id="metaFilterCheck" onchange="loadPapers(1)">
+          <span style="font-size:0.8rem">메타분석만</span>
+        </label>
+        <button class="btn btn-secondary btn-sm" onclick="startIndexing()">
+          <i class="fas fa-layer-group"></i> RAG 인덱싱
+        </button>
+        <button class="btn btn-accent btn-sm" onclick="startBuildGraph()">
+          <i class="fas fa-project-diagram"></i> 그래프 구축
+        </button>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <input class="input" id="paperSearchInput" placeholder="제목, 초록 검색..." oninput="debounceSearch()">
+      <button class="btn btn-secondary btn-sm" onclick="loadPapers(1)">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+
+    <!-- 인덱싱/그래프 구축 진행 -->
+    <div id="paperActionProgress" style="display:none;margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:6px">
+        <span id="paperActionText">처리 중...</span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="paperActionBar" style="width:10%;animation:pulseWidth 1.5s infinite"></div>
+      </div>
+    </div>
+
+    <div id="papersList">
+      <div class="empty-state">
+        <i class="fas fa-satellite-dish"></i>
+        <p>아직 수집된 논문이 없습니다<br>크롤링 탭에서 파이토케미컬을 검색하세요</p>
+      </div>
+    </div>
+    <div class="pagination" id="papersPagination"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     탭 3: 지식 그래프
+═══════════════════════════════════════════════════ -->
+<div id="tab-graph" class="tab-panel">
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:1rem">
+      <div class="card-title" style="margin:0"><i class="fas fa-project-diagram"></i> 파이토케미컬 지식 그래프</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input class="input" id="graphSearchInput" placeholder="노드 검색..." style="width:160px" oninput="filterGraph()">
+        <select class="select" id="nodeTypeFilter" onchange="filterGraph()" style="width:140px">
+          <option value="">모든 노드</option>
+          <option value="Phytochemical">파이토케미컬</option>
+          <option value="HealthCondition">건강 조건</option>
+          <option value="Mechanism">메커니즘</option>
+          <option value="FoodSource">식품 소스</option>
+          <option value="Biomarker">바이오마커</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="resetGraphZoom()"><i class="fas fa-expand"></i></button>
+        <button class="btn btn-secondary btn-sm" onclick="startBuildGraph()"><i class="fas fa-sync"></i> 재구축</button>
+      </div>
+    </div>
+
+    <!-- 그래프 구축 진행 -->
+    <div id="graphBuildProgress" style="display:none;margin-bottom:1rem">
+      <div style="font-size:0.8rem;margin-bottom:6px" id="graphBuildText">그래프 구축 중...</div>
+      <div class="progress-wrap">
+        <div class="progress-bar" style="width:0%" id="graphBuildBar"></div>
+      </div>
+    </div>
+
+    <div id="graph-container">
+      <svg id="graph-svg"></svg>
+      <div class="graph-tooltip" id="graphTooltip"></div>
+      <div id="graphEmpty" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--text-muted)">
+        <i class="fas fa-project-diagram" style="font-size:3rem;opacity:0.3;display:block;margin-bottom:1rem"></i>
+        <p style="font-size:0.9rem">논문을 크롤링하고 그래프 구축 버튼을 눌러주세요</p>
+      </div>
+    </div>
+
+    <div class="graph-legend" id="graphLegend">
+      <div class="legend-item"><div class="legend-dot" style="background:#4CAF50"></div> 파이토케미컬</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#F44336"></div> 건강 조건</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2196F3"></div> 메커니즘</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#FF9800"></div> 식품 소스</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#9C27B0"></div> 바이오마커</div>
+    </div>
+
+    <!-- 그래프 통계 -->
+    <div class="stat-grid" style="margin-top:1rem" id="graphStatGrid">
+      <div class="stat-card"><div class="stat-num" id="g-nodes">0</div><div class="stat-label">노드</div></div>
+      <div class="stat-card"><div class="stat-num" id="g-edges">0</div><div class="stat-label">관계</div></div>
+      <div class="stat-card"><div class="stat-num" id="g-phyto">0</div><div class="stat-label">파이토케미컬</div></div>
+      <div class="stat-card"><div class="stat-num" id="g-health">0</div><div class="stat-label">건강 조건</div></div>
+    </div>
+  </div>
+
+  <!-- 노드 상세 패널 -->
+  <div class="card" id="nodeDetailPanel" style="display:none">
+    <div class="card-title"><i class="fas fa-info-circle"></i> <span id="nodeDetailTitle">노드 상세 정보</span></div>
+    <div id="nodeDetailContent"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     탭 4: AI 연구 어시스턴트 (RAG 챗봇)
+═══════════════════════════════════════════════════ -->
+<div id="tab-chatbot" class="tab-panel">
+
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem">
+    <!-- 채팅 영역 -->
+    <div class="card" style="margin:0">
+      <div class="card-title"><i class="fas fa-robot"></i> AI 파이토케미컬 연구 어시스턴트</div>
+
+      <div id="chat-messages">
+        <div class="msg-bubble msg-bot">
+          👋 안녕하세요! 저는 PubMed 논문을 기반으로 파이토케미컬과 건강 상관성에 대해 답변하는 AI 연구 어시스턴트입니다.
+          <br><br>
+          🔬 먼저 논문을 크롤링하고 인덱싱한 후 질문해주세요.
+          <br><br>
+          💡 <strong>예시 질문:</strong>
+          <ul style="margin-top:8px;padding-left:16px;font-size:0.82rem;color:#94a3b8">
+            <li>커큐민이 염증에 미치는 효과는?</li>
+            <li>레스베라트롤과 심혈관 건강의 관계</li>
+            <li>케르세틴의 항암 메커니즘을 설명해줘</li>
+            <li>설포라판이 장내 미생물에 미치는 영향</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <textarea class="chat-input" id="chatInput" placeholder="파이토케미컬과 건강에 관해 질문하세요..." rows="2"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+        <button class="btn btn-primary" onclick="sendChat()" id="chatSendBtn" style="height:fit-content;align-self:flex-end">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">
+        Enter로 전송 | Shift+Enter 줄바꿈
+      </div>
+    </div>
+
+    <!-- 사이드 패널 -->
+    <div>
+      <div class="card" style="margin:0 0 1rem 0">
+        <div class="card-title" style="margin-bottom:0.75rem"><i class="fas fa-layer-group"></i> 시스템 상태</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;font-size:0.85rem">
+            <span style="color:var(--text-muted)">인덱싱 문서</span>
+            <span id="ragIndexedCount" style="color:#34d399;font-weight:700">0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.85rem">
+            <span style="color:var(--text-muted)">그래프 노드</span>
+            <span id="ragGraphNodes" style="color:#34d399;font-weight:700">0</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="startIndexing()" style="width:100%">
+            <i class="fas fa-sync"></i> 문서 재인덱싱
+          </button>
+        </div>
+      </div>
+
+      <div class="card" style="margin:0">
+        <div class="card-title" style="margin-bottom:0.75rem"><i class="fas fa-lightbulb"></i> 추천 질문</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.78rem">
+            커큐민의 NF-κB 억제 메커니즘
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.78rem">
+            메타분석에서 케르세틴과 당뇨병 관계
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.78rem">
+            설포라판의 Nrf2 경로 활성화
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.78rem">
+            레스베라트롤과 SIRT1 활성화
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.78rem">
+            안토시아닌의 산화스트레스 감소 효과
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- 토스트 -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+//   전역 상태
+// ═══════════════════════════════════════
+const API = '';  // 같은 서버
+let chatHistory = [];
+let graphData = { nodes: [], edges: [] };
+let graphSimulation = null;
+let papersCurrentPage = 1;
+let searchDebounce = null;
+let activeCrawlTask = null;
+let activeGraphTask = null;
+let activeIndexTask = null;
+let buildGraphTaskId = null;
+
+// ═══════════════════════════════════════
+//   API Key 관리
+// ═══════════════════════════════════════
+function getApiKey() {
+  return document.getElementById('apiKeyInput').value.trim();
+}
+
+function handleApiKeyInput() {
+  const key = getApiKey();
+  const badge = document.getElementById('apiKeyBadge');
+  if (key.startsWith('sk-') && key.length > 20) {
+    badge.textContent = '✓ 설정됨';
+    badge.className = 'badge-key ok';
+    localStorage.setItem('oai_key', key);
+  } else {
+    badge.textContent = '미설정';
+    badge.className = 'badge-key no';
+  }
+}
+
+// 저장된 키 복원
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('oai_key');
+  if (saved) {
+    document.getElementById('apiKeyInput').value = saved;
+    handleApiKeyInput();
+  }
+  loadStats();
+  loadPapers(1);
+  loadGraph();
+});
+
+function requireApiKey() {
+  if (!getApiKey().startsWith('sk-')) {
+    showToast('상단에 OpenAI API Key를 먼저 입력하세요', 'error');
+    return false;
+  }
+  return true;
+}
+
+// ═══════════════════════════════════════
+//   탭 전환
+// ═══════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'graph') { loadGraph(); }
+  if (name === 'papers') { loadPapers(papersCurrentPage); }
+  if (name === 'chatbot') { loadRagStats(); }
+}
+
+// ═══════════════════════════════════════
+//   통계 로드
+// ═══════════════════════════════════════
+async function loadStats() {
+  try {
+    const [paperStats, graphStats, ragStats] = await Promise.all([
+      axios.get(API + '/api/papers/stats').catch(() => ({data:{}})),
+      axios.get(API + '/api/graph/stats').catch(() => ({data:{}})),
+      axios.get(API + '/api/rag/stats').catch(() => ({data:{}}))
+    ]);
+    const ps = paperStats.data, gs = graphStats.data, rs = ragStats.data;
+    document.getElementById('stat-total').textContent = ps.total_papers || 0;
+    document.getElementById('stat-meta').textContent = ps.meta_analysis_count || 0;
+    document.getElementById('stat-graph-nodes').textContent = gs.total_nodes || 0;
+    document.getElementById('stat-graph-edges').textContent = gs.total_edges || 0;
+    document.getElementById('stat-indexed').textContent = rs.indexed_documents || 0;
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════
+//   크롤링
+// ═══════════════════════════════════════
+async function startCrawl() {
+  const phyto = document.getElementById('phytoInput').value.trim();
+  if (!phyto) { showToast('파이토케미컬 이름을 입력하세요', 'error'); return; }
+
+  const btn = document.getElementById('crawlBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 크롤링 중...';
+
+  document.getElementById('crawlProgress').style.display = 'block';
+  document.getElementById('crawlResultCard').style.display = 'none';
+  updateCrawlProgress('PubMed 검색 시작...', 10);
+
+  try {
+    const res = await axios.post(API + '/api/crawl', {
+      phytochemical: phyto,
+      health_condition: document.getElementById('healthSelect').value || null,
+      max_results: parseInt(document.getElementById('maxResultsSelect').value),
+      meta_analysis_only: document.getElementById('metaOnlyCheck').checked,
+      pub_type: document.getElementById('pubTypeSelect').value || null
+    });
+    activeCrawlTask = res.data.task_id;
+    pollCrawlStatus(activeCrawlTask);
+  } catch(e) {
+    showToast('크롤링 시작 실패: ' + (e.response?.data?.detail || e.message), 'error');
+    resetCrawlBtn();
+  }
+}
+
+function updateCrawlProgress(msg, pct) {
+  document.getElementById('crawlStatusText').textContent = msg;
+  document.getElementById('crawlPercent').textContent = pct + '%';
+  document.getElementById('crawlProgressBar').style.width = pct + '%';
+}
+
+async function pollCrawlStatus(taskId) {
+  try {
+    const res = await axios.get(API + '/api/crawl/status/' + taskId);
+    const data = res.data;
+
+    if (data.status === 'running' || data.status === 'started') {
+      const steps = {searching:20, fetching:60, complete:100};
+      const pct = steps[data.step] || 30;
+      updateCrawlProgress(data.message || '처리 중...', pct);
+      setTimeout(() => pollCrawlStatus(taskId), 1500);
+    } else if (data.status === 'complete') {
+      updateCrawlProgress('✅ 크롤링 완료!', 100);
+      showCrawlResult(data.result);
+      resetCrawlBtn();
+      loadStats();
+      showToast(`크롤링 완료: ${data.result.total}편 수집`, 'success');
+    } else if (data.status === 'error') {
+      showToast('오류: ' + data.message, 'error');
+      resetCrawlBtn();
+    }
+  } catch(e) {
+    setTimeout(() => pollCrawlStatus(taskId), 2000);
+  }
+}
+
+function showCrawlResult(result) {
+  document.getElementById('crawlResultCard').style.display = 'block';
+  document.getElementById('res-total').textContent = result.total;
+  document.getElementById('res-meta').textContent = result.meta_count;
+  document.getElementById('res-new').textContent = result.new_count;
+
+  const list = document.getElementById('crawlPreviewList');
+  const papers = result.papers || [];
+  list.innerHTML = papers.slice(0, 5).map(p => `
+    <div class="paper-card">
+      <div class="paper-title">${p.title || '제목 없음'}</div>
+      <div class="paper-meta">
+        ${p.is_meta_analysis ? '<span class="badge badge-meta">🔬 메타분석</span>' : ''}
+        ${p.is_systematic_review ? '<span class="badge badge-sr">📊 체계적리뷰</span>' : ''}
+        <span class="badge badge-year">${p.year || ''}</span>
+        <span>${p.journal || ''}</span>
+        ${p.url ? `<a href="${p.url}" target="_blank" style="color:#34d399;font-size:0.75rem">PMID:${p.pmid}</a>` : ''}
+      </div>
+    </div>
+  `).join('') + (papers.length > 5 ? `<div style="text-align:center;color:var(--text-muted);font-size:0.8rem;padding:8px">외 ${papers.length-5}편...</div>` : '');
+}
+
+function resetCrawlBtn() {
+  const btn = document.getElementById('crawlBtn');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-satellite-dish"></i> 크롤링 시작';
+}
+
+// ═══════════════════════════════════════
+//   논문 목록
+// ═══════════════════════════════════════
+async function loadPapers(page = 1) {
+  papersCurrentPage = page;
+  const search = document.getElementById('paperSearchInput')?.value || '';
+  const metaOnly = document.getElementById('metaFilterCheck')?.checked || false;
+  
+  try {
+    const res = await axios.get(API + '/api/papers', {
+      params: { page, limit: 15, meta_only: metaOnly, search: search || undefined }
+    });
+    const { papers, total, total_pages } = res.data;
+    
+    const list = document.getElementById('papersList');
+    if (!papers.length) {
+      list.innerHTML = `<div class="empty-state"><i class="fas fa-satellite-dish"></i><p>논문이 없습니다. 크롤링을 시작하세요</p></div>`;
+    } else {
+      list.innerHTML = `
+        <div class="section-header">
+          <span class="section-title">논문 목록</span>
+          <span class="count-badge">총 ${total}편</span>
+        </div>
+        ${papers.map(p => `
+          <div class="paper-card">
+            <div class="paper-title"><a href="${p.url}" target="_blank" style="color:var(--text);text-decoration:none;hover:color:#34d399">${p.title || '제목 없음'}</a></div>
+            <div class="paper-meta">
+              ${p.is_meta_analysis ? '<span class="badge badge-meta">🔬 메타분석</span>' : ''}
+              ${p.is_systematic_review ? '<span class="badge badge-sr">📊 체계적리뷰</span>' : ''}
+              <span class="badge badge-year">${p.year || ''}</span>
+              <span>${(p.journal || '').substring(0, 40)}</span>
+              <a href="${p.url}" target="_blank" class="source-link">PMID:${p.pmid}</a>
+            </div>
+            <div class="paper-abstract">${p.abstract || '초록 없음'}</div>
+          </div>
+        `).join('')}`;
+    }
+    
+    // 페이지네이션
+    const pg = document.getElementById('papersPagination');
+    if (total_pages > 1) {
+      let btns = '';
+      const start = Math.max(1, page - 2), end = Math.min(total_pages, page + 2);
+      if (start > 1) btns += `<button class="page-btn" onclick="loadPapers(1)">1</button>`;
+      if (start > 2) btns += `<button class="page-btn" disabled>...</button>`;
+      for (let i = start; i <= end; i++) {
+        btns += `<button class="page-btn ${i===page?'active':''}" onclick="loadPapers(${i})">${i}</button>`;
+      }
+      if (end < total_pages - 1) btns += `<button class="page-btn" disabled>...</button>`;
+      if (end < total_pages) btns += `<button class="page-btn" onclick="loadPapers(${total_pages})">${total_pages}</button>`;
+      pg.innerHTML = btns;
+    } else {
+      pg.innerHTML = '';
+    }
+  } catch(e) {
+    console.error('논문 로드 오류:', e);
+  }
+}
+
+function debounceSearch() {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => loadPapers(1), 400);
+}
+
+// ═══════════════════════════════════════
+//   인덱싱 (RAG)
+// ═══════════════════════════════════════
+async function startIndexing() {
+  if (!requireApiKey()) return;
+  
+  const progressDiv = document.getElementById('paperActionProgress');
+  const progressText = document.getElementById('paperActionText');
+  progressDiv.style.display = 'block';
+  progressText.textContent = '문서 인덱싱 중...';
+  
+  try {
+    const res = await axios.post(API + '/api/rag/index', { openai_api_key: getApiKey() });
+    activeIndexTask = res.data.task_id;
+    pollIndexStatus(activeIndexTask);
+  } catch(e) {
+    showToast('인덱싱 시작 실패', 'error');
+    progressDiv.style.display = 'none';
+  }
+}
+
+async function pollIndexStatus(taskId) {
+  const progressText = document.getElementById('paperActionText');
+  try {
+    const res = await axios.get(API + '/api/rag/index/status/' + taskId);
+    const data = res.data;
+    if (data.status === 'running' || data.status === 'started') {
+      progressText.textContent = data.message || '인덱싱 중...';
+      setTimeout(() => pollIndexStatus(taskId), 2000);
+    } else if (data.status === 'complete') {
+      document.getElementById('paperActionProgress').style.display = 'none';
+      showToast(`인덱싱 완료: ${data.total_indexed}개 문서`, 'success');
+      loadStats();
+    } else {
+      document.getElementById('paperActionProgress').style.display = 'none';
+      showToast('인덱싱 오류: ' + data.message, 'error');
+    }
+  } catch(e) {
+    setTimeout(() => pollIndexStatus(taskId), 2500);
+  }
+}
+
+// ═══════════════════════════════════════
+//   그래프 구축
+// ═══════════════════════════════════════
+async function startBuildGraph() {
+  if (!requireApiKey()) return;
+  
+  document.getElementById('graphBuildProgress').style.display = 'block';
+  document.getElementById('graphBuildText').textContent = '그래프 구축 시작 중...';
+  document.getElementById('graphBuildBar').style.width = '5%';
+  
+  try {
+    const res = await axios.post(API + '/api/graph/build', {
+      use_all_papers: true,
+      openai_api_key: getApiKey()
+    });
+    buildGraphTaskId = res.data.task_id;
+    pollGraphBuildStatus(buildGraphTaskId);
+  } catch(e) {
+    document.getElementById('graphBuildProgress').style.display = 'none';
+    showToast('그래프 구축 실패: ' + (e.response?.data?.detail || e.message), 'error');
+  }
+}
+
+async function pollGraphBuildStatus(taskId) {
+  try {
+    const res = await axios.get(API + '/api/graph/build/status/' + taskId);
+    const data = res.data;
+    const bar = document.getElementById('graphBuildBar');
+    const text = document.getElementById('graphBuildText');
+
+    if (data.status === 'running') {
+      const pct = data.total > 0 ? Math.min(95, (data.current / data.total * 100)) : 30;
+      bar.style.width = pct + '%';
+      text.textContent = data.message || '처리 중...';
+      setTimeout(() => pollGraphBuildStatus(taskId), 2000);
+    } else if (data.status === 'complete') {
+      bar.style.width = '100%';
+      text.textContent = '✅ ' + (data.message || '완료');
+      setTimeout(() => {
+        document.getElementById('graphBuildProgress').style.display = 'none';
+        loadGraph();
+        loadStats();
+      }, 1500);
+      showToast('그래프 구축 완료!', 'success');
+    } else if (data.status === 'error') {
+      document.getElementById('graphBuildProgress').style.display = 'none';
+      showToast('그래프 구축 오류: ' + data.message, 'error');
+    } else {
+      setTimeout(() => pollGraphBuildStatus(taskId), 2000);
+    }
+  } catch(e) {
+    setTimeout(() => pollGraphBuildStatus(taskId), 2500);
+  }
+}
+
+async function autoIndexAndBuild() {
+  if (!requireApiKey()) return;
+  await startIndexing();
+  await startBuildGraph();
+}
+
+// ═══════════════════════════════════════
+//   D3.js 그래프 시각화
+// ═══════════════════════════════════════
+async function loadGraph() {
+  try {
+    const res = await axios.get(API + '/api/graph');
+    graphData = res.data;
+    renderGraph(graphData);
+    updateGraphStats(graphData);
+  } catch(e) {
+    console.error('그래프 로드 오류:', e);
+  }
+}
+
+function renderGraph(data) {
+  const container = document.getElementById('graph-container');
+  const svg = d3.select('#graph-svg');
+  svg.selectAll('*').remove();
+
+  const W = container.clientWidth, H = container.clientHeight;
+
+  if (!data.nodes || data.nodes.length === 0) {
+    document.getElementById('graphEmpty').style.display = 'block';
+    return;
+  }
+  document.getElementById('graphEmpty').style.display = 'none';
+
+  const zoom = d3.zoom().scaleExtent([0.1, 4]).on('zoom', (e) => g.attr('transform', e.transform));
+  svg.call(zoom);
+
+  const g = svg.append('g');
+
+  // 마커 (화살표)
+  svg.append('defs').append('marker')
+    .attr('id', 'arrow').attr('viewBox', '0 -5 10 10').attr('refX', 20).attr('refY', 0)
+    .attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto')
+    .append('path').attr('d', 'M0,-5L10,0L0,5').attr('fill', '#475569');
+
+  // 엣지
+  const link = g.append('g').selectAll('line')
+    .data(data.edges).enter().append('line')
+    .attr('class', 'link')
+    .attr('stroke', d => getEdgeColor(d.type))
+    .attr('stroke-width', d => Math.min(1 + (d.weight || 1) * 0.5, 4))
+    .attr('marker-end', 'url(#arrow)');
+
+  // 엣지 레이블
+  const linkLabel = g.append('g').selectAll('text')
+    .data(data.edges).enter().append('text')
+    .attr('class', 'link-label')
+    .text(d => d.label || d.type)
+    .attr('text-anchor', 'middle');
+
+  // 노드 그룹
+  const node = g.append('g').selectAll('g')
+    .data(data.nodes).enter().append('g')
+    .attr('class', 'node')
+    .call(d3.drag()
+      .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
+    .on('click', (e, d) => showNodeDetail(d))
+    .on('mouseover', (e, d) => showTooltip(e, d))
+    .on('mouseout', () => document.getElementById('graphTooltip').style.display = 'none');
+
+  node.append('circle')
+    .attr('r', d => d.size || 8)
+    .attr('fill', d => d.color || '#999')
+    .attr('stroke', '#1e293b').attr('stroke-width', 2);
+
+  node.append('text')
+    .attr('dy', d => -(d.size || 8) - 4)
+    .attr('text-anchor', 'middle')
+    .text(d => d.name.length > 20 ? d.name.substring(0, 18) + '…' : d.name);
+
+  // 시뮬레이션
+  const sim = d3.forceSimulation(data.nodes)
+    .force('link', d3.forceLink(data.edges).id(d => d.id).distance(120).strength(0.5))
+    .force('charge', d3.forceManyBody().strength(-300))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('collision', d3.forceCollide().radius(d => (d.size || 8) + 15));
+
+  graphSimulation = sim;
+
+  sim.on('tick', () => {
+    link
+      .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    linkLabel
+      .attr('x', d => (d.source.x + d.target.x) / 2)
+      .attr('y', d => (d.source.y + d.target.y) / 2);
+    node.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+}
+
+function getEdgeColor(type) {
+  const colors = {
+    IMPROVES: '#4CAF50', REDUCES: '#F44336', INHIBITS: '#FF5722',
+    ACTIVATES: '#03A9F4', FOUND_IN: '#FF9800', PREVENTS: '#8BC34A',
+    INCREASES: '#FFEB3B', ASSOCIATED_WITH: '#607D8B', AFFECTS: '#9E9E9E'
+  };
+  return colors[type] || '#607D8B';
+}
+
+function showTooltip(event, d) {
+  const tooltip = document.getElementById('graphTooltip');
+  tooltip.style.display = 'block';
+  tooltip.style.left = (event.offsetX + 15) + 'px';
+  tooltip.style.top = (event.offsetY - 10) + 'px';
+  tooltip.innerHTML = `
+    <div style="font-weight:700;color:${d.color};margin-bottom:6px">${d.name}</div>
+    <div style="color:#94a3b8;font-size:0.75rem">${d.type}</div>
+    ${d.description ? `<div style="margin-top:6px;font-size:0.8rem">${d.description.substring(0,120)}</div>` : ''}
+    <div style="margin-top:6px;font-size:0.75rem;color:#64748b">언급 횟수: ${d.mention_count || 1}</div>
+  `;
+}
+
+function showNodeDetail(d) {
+  const panel = document.getElementById('nodeDetailPanel');
+  panel.style.display = 'block';
+  document.getElementById('nodeDetailTitle').textContent = d.name;
+  document.getElementById('nodeDetailContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">타입</div>
+        <span class="badge" style="background:${d.color}22;color:${d.color}">${d.type}</span>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">언급 횟수</div>
+        <div style="font-weight:700;color:#34d399">${d.mention_count || 1}</div>
+      </div>
+    </div>
+    ${d.description ? `<div style="margin-top:1rem"><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">설명</div><div style="font-size:0.85rem">${d.description}</div></div>` : ''}
+    ${d.pmids?.length ? `<div style="margin-top:1rem"><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px">관련 논문 (PMID)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${d.pmids.map(id => `<a href="https://pubmed.ncbi.nlm.nih.gov/${id}/" target="_blank" class="badge" style="background:#065f46;color:#34d399;text-decoration:none">${id}</a>`).join('')}</div>
+    </div>` : ''}
+  `;
+}
+
+function filterGraph() {
+  const search = document.getElementById('graphSearchInput').value.toLowerCase();
+  const type = document.getElementById('nodeTypeFilter').value;
+  
+  let filtered = { ...graphData };
+  
+  if (search || type) {
+    filtered.nodes = graphData.nodes.filter(n => 
+      (!search || n.name.toLowerCase().includes(search)) &&
+      (!type || n.type === type)
+    );
+    const nodeIds = new Set(filtered.nodes.map(n => n.id));
+    filtered.edges = graphData.edges.filter(e => nodeIds.has(e.source) || nodeIds.has(e.target));
+  }
+  
+  renderGraph(filtered);
+}
+
+function resetGraphZoom() {
+  d3.select('#graph-svg').transition().call(
+    d3.zoom().transform, d3.zoomIdentity
+  );
+}
+
+function updateGraphStats(data) {
+  const nodes = data.nodes || [];
+  document.getElementById('g-nodes').textContent = nodes.length;
+  document.getElementById('g-edges').textContent = (data.edges || []).length;
+  document.getElementById('g-phyto').textContent = nodes.filter(n => n.type === 'Phytochemical').length;
+  document.getElementById('g-health').textContent = nodes.filter(n => n.type === 'HealthCondition').length;
+}
+
+// ═══════════════════════════════════════
+//   RAG 챗봇
+// ═══════════════════════════════════════
+async function loadRagStats() {
+  try {
+    const [ragRes, graphRes] = await Promise.all([
+      axios.get(API + '/api/rag/stats'),
+      axios.get(API + '/api/graph/stats')
+    ]);
+    document.getElementById('ragIndexedCount').textContent = ragRes.data.indexed_documents || 0;
+    document.getElementById('ragGraphNodes').textContent = graphRes.data.total_nodes || 0;
+  } catch(e) {}
+}
+
+async function sendChat() {
+  if (!requireApiKey()) return;
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  
+  input.value = '';
+  const btn = document.getElementById('chatSendBtn');
+  btn.disabled = true;
+  
+  appendMessage('user', msg);
+  appendThinking();
+  
+  chatHistory.push({ role: 'user', content: msg });
+  
+  try {
+    const res = await axios.post(API + '/api/rag/chat', {
+      message: msg,
+      chat_history: chatHistory.slice(-6),
+      openai_api_key: getApiKey()
+    });
+    
+    const data = res.data;
+    removeThinking();
+    appendBotMessage(data.answer, data.sources);
+    chatHistory.push({ role: 'assistant', content: data.answer });
+  } catch(e) {
+    removeThinking();
+    appendMessage('bot', '오류가 발생했습니다: ' + (e.response?.data?.detail || e.message));
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function appendMessage(role, content) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = `msg-bubble msg-${role}`;
+  div.textContent = content;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendBotMessage(content, sources) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg-bubble msg-bot';
+  
+  // 마크다운 기본 변환
+  let html = content
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+  
+  let sourcesHtml = '';
+  if (sources && sources.length > 0) {
+    sourcesHtml = `<div class="msg-sources">📚 참고 논문:<br>` +
+      sources.map(s => `<a href="${s.url}" target="_blank" class="source-link">
+        ${s.is_meta_analysis ? '🔬' : '📄'} ${(s.title || '').substring(0, 60)}... (${s.year || ''})
+      </a>`).join('<br>') + '</div>';
+  }
+  
+  div.innerHTML = html + sourcesHtml;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendThinking() {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg-thinking';
+  div.id = 'thinkingBubble';
+  div.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeThinking() {
+  const el = document.getElementById('thinkingBubble');
+  if (el) el.remove();
+}
+
+function setQuestion(q) {
+  document.getElementById('chatInput').value = q;
+  document.getElementById('chatInput').focus();
+}
+
+// ═══════════════════════════════════════
+//   토스트
+// ═══════════════════════════════════════
+let toastTimer = null;
+function showToast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ═══════════════════════════════════════
+//   주기적 통계 갱신
+// ═══════════════════════════════════════
+setInterval(loadStats, 30000);
+</script>
+</body>
+</html>
