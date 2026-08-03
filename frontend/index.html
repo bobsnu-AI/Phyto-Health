@@ -198,16 +198,16 @@
 <!-- 탭 네비게이션 -->
 <nav>
   <div class="nav-inner">
-    <button class="tab-btn active" onclick="switchTab('crawl')">
+    <button class="tab-btn active" onclick="switchTab(this,'crawl')">
       <i class="fas fa-satellite-dish"></i> 실시간 크롤링
     </button>
-    <button class="tab-btn" onclick="switchTab('papers')">
+    <button class="tab-btn" onclick="switchTab(this,'papers')">
       <i class="fas fa-file-medical-alt"></i> 논문 데이터베이스
     </button>
-    <button class="tab-btn" onclick="switchTab('graph')">
+    <button class="tab-btn" onclick="switchTab(this,'graph')">
       <i class="fas fa-project-diagram"></i> 지식 그래프
     </button>
-    <button class="tab-btn" onclick="switchTab('chatbot')">
+    <button class="tab-btn" onclick="switchTab(this,'chatbot')">
       <i class="fas fa-robot"></i> AI 연구 어시스턴트
     </button>
   </div>
@@ -333,7 +333,7 @@
     </div>
     <div id="crawlPreviewList"></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem">
-      <button class="btn btn-accent btn-sm" onclick="switchTab('papers')">
+      <button class="btn btn-accent btn-sm" onclick="document.querySelector('.tab-btn:nth-child(2)').click()">
         <i class="fas fa-list"></i> 전체 논문 보기
       </button>
       <button class="btn btn-secondary btn-sm" onclick="autoIndexAndBuild()">
@@ -627,11 +627,11 @@ function requireApiKey() {
 // ═══════════════════════════════════════
 //   탭 전환
 // ═══════════════════════════════════════
-function switchTab(name) {
+function switchTab(btn, name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
+  btn.classList.add('active');
   if (name === 'graph') { loadGraph(); }
   if (name === 'papers') { loadPapers(papersCurrentPage); }
   if (name === 'chatbot') { loadRagStats(); }
@@ -708,7 +708,12 @@ async function pollCrawlStatus(taskId) {
       showCrawlResult(data.result);
       resetCrawlBtn();
       loadStats();
-      showToast(`크롤링 완료: ${data.result.total}편 수집`, 'success');
+      const warn = data.result.warning;
+      if (warn) {
+        showToast('⚠️ ' + warn, 'error');
+      } else {
+        showToast(`크롤링 완료: ${data.result.total}편 수집`, 'success');
+      }
     } else if (data.status === 'error') {
       showToast('오류: ' + data.message, 'error');
       resetCrawlBtn();

@@ -132,16 +132,27 @@ async def crawl_papers(request: CrawlRequest, background_tasks: BackgroundTasks)
                 pub_type=request.pub_type,
                 progress_callback=update_progress
             )
-            crawl_progress[task_id] = {
-                "status": "complete",
-                "result": {
-                    "total": result["total"],
-                    "meta_count": result["meta_count"],
-                    "new_count": result["new_count"],
-                    "query": result["query"],
-                    "papers": result["papers"][:10]  # 미리보기 10개
+            if result["total"] == 0:
+                crawl_progress[task_id] = {
+                    "status": "complete",
+                    "result": {
+                        "total": 0, "meta_count": 0, "new_count": 0,
+                        "query": result.get("query", ""),
+                        "papers": [],
+                        "warning": "검색 결과가 없습니다. 검색어를 확인하거나 잠시 후 다시 시도하세요. (NCBI API 일시 차단 가능)"
+                    }
                 }
-            }
+            else:
+                crawl_progress[task_id] = {
+                    "status": "complete",
+                    "result": {
+                        "total": result["total"],
+                        "meta_count": result["meta_count"],
+                        "new_count": result["new_count"],
+                        "query": result["query"],
+                        "papers": result["papers"][:10]
+                    }
+                }
         except Exception as e:
             crawl_progress[task_id] = {"status": "error", "message": str(e)}
     

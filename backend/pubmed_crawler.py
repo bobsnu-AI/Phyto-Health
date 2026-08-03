@@ -1,6 +1,6 @@
 """
 PubMed 크롤링 모듈 - 파이토케미컬 & 건강 상관성 논문 수집
-실시간 크롤링, 메타분석 논문 필터링 지원
+Europe PMC API (NCBI 차단 대안) + NCBI 폴백 지원
 """
 
 import os
@@ -19,200 +19,286 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 ABSTRACTS_DIR = DATA_DIR / "abstracts"
 ABSTRACTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# PubMed API 기본 URL
-ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-EFETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+# Europe PMC API (NCBI 대안 - 차단 없음)
+EUROPEPMC_SEARCH = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
+EUROPEPMC_ARTICLE = "https://www.ebi.ac.uk/europepmc/webservices/rest/article"
 
-# 파이토케미컬 기본 검색 카테고리
+# NCBI (폴백용, API key 있을 때 우선 사용)
+ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+EFETCH_URL  = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+
 PHYTOCHEMICAL_CATEGORIES = {
-    "Polyphenols": ["resveratrol", "quercetin", "curcumin", "catechins", "anthocyanins", "flavonoids"],
-    "Carotenoids": ["lycopene", "beta-carotene", "lutein", "zeaxanthin", "astaxanthin"],
-    "Glucosinolates": ["sulforaphane", "indole-3-carbinol", "sinigrin"],
-    "Terpenoids": ["limonene", "perillyl alcohol", "betulinic acid", "ursolic acid"],
-    "Alkaloids": ["berberine", "capsaicin", "piperine", "caffeine"],
-    "Organosulfur": ["allicin", "diallyl sulfide", "S-allyl cysteine"],
-    "Isoflavones": ["genistein", "daidzein", "formononetin"],
-    "Stilbenes": ["resveratrol", "pterostilbene"],
+    "Polyphenols":   ["resveratrol","quercetin","curcumin","catechins","anthocyanins","flavonoids"],
+    "Carotenoids":   ["lycopene","beta-carotene","lutein","zeaxanthin","astaxanthin"],
+    "Glucosinolates":["sulforaphane","indole-3-carbinol","sinigrin"],
+    "Terpenoids":    ["limonene","perillyl alcohol","betulinic acid","ursolic acid"],
+    "Alkaloids":     ["berberine","capsaicin","piperine","caffeine"],
+    "Organosulfur":  ["allicin","diallyl sulfide","S-allyl cysteine"],
+    "Isoflavones":   ["genistein","daidzein","formononetin"],
+    "Stilbenes":     ["resveratrol","pterostilbene"],
 }
 
 HEALTH_CONDITIONS = [
-    "cancer", "cardiovascular disease", "diabetes", "obesity",
-    "inflammation", "oxidative stress", "gut microbiota",
-    "cognitive function", "aging", "immune function",
-    "hypertension", "liver disease", "metabolic syndrome"
+    "cancer","cardiovascular disease","diabetes","obesity",
+    "inflammation","oxidative stress","gut microbiota",
+    "cognitive function","aging","immune function",
+    "hypertension","liver disease","metabolic syndrome"
 ]
 
-
-def fetch_with_retry(url: str, params: dict = None, max_retries: int = 3) -> bytes:
-    """재시도 로직이 포함된 HTTP GET 요청"""
-    for attempt in range(max_retries):
-        try:
-            response = requests.get(url, params=params, timeout=30)
-            if response.status_code == 200:
-                return response.content
-            elif response.status_code == 429:  # Rate limit
-                time.sleep(2 ** attempt)
-            else:
-                time.sleep(1)
-        except requests.exceptions.RequestException as e:
-            if attempt < max_retries - 1:
-                time.sleep(2)
-            else:
-                raise e
-    return None
+# 논문 타입 → Europe PMC pubType 매핑
+PUBTYPE_MAP = {
+    "Meta-Analysis":            "META-ANALYSIS",
+    "Systematic Review":        "SYSTEMATIC_REVIEW",
+    "Randomized Controlled Trial": "RANDOMIZED-CONTROLLED-TRIAL",
+    "Review":                   "REVIEW",
+    "Clinical Trial":           "CLINICAL-TRIAL",
+}
 
 
-def search_pubmed_ids(query: str, max_results: int = 200, pub_type: str = None) -> list:
+# ──────────────────────────────────────────────────────────────────────────────
+# Europe PMC 크롤링 (주 소스)
+# ──────────────────────────────────────────────────────────────────────────────
+
+def search_europepmc(query: str, max_results: int = 100,
+                     pub_type: str = None, meta_only: bool = False) -> list:
     """
-    PubMed 검색으로 PMID 목록 반환
-    pub_type: 'Meta-Analysis', 'Systematic Review', 'Review', 'Clinical Trial' 등
+    Europe PMC 검색 → 논문 딕셔너리 리스트 반환 (resultType=lite)
+    
+    ⚠️ 핵심 주의사항:
+    - SRC:MED, HAS_ABSTRACT:Y 필터를 쿼리에 추가하면 API가 {'version':'6.9'} 만 반환
+    - 해결: 쿼리는 단순하게 유지하고, 결과를 클라이언트에서 pmid/abstract 유무로 필터링
     """
-    search_query = query
-    if pub_type:
-        search_query = f"({query}) AND {pub_type}[pt]"
+    # ✅ 단순 쿼리 유지 (SRC:MED, HAS_ABSTRACT 필터 제거)
+    epmc_query = query
+    if meta_only or pub_type == "Meta-Analysis":
+        epmc_query += " meta-analysis"
+    elif pub_type == "Systematic Review":
+        epmc_query += " systematic review"
+    elif pub_type == "Review":
+        epmc_query += " review"
 
-    params = {
-        "db": "pubmed",
-        "term": search_query,
-        "retmax": max_results,
-        "retmode": "xml",
-        "sort": "relevance"
-    }
-    
-    content = fetch_with_retry(ESEARCH_URL, params)
-    if not content:
-        return []
-    
-    root = ET.fromstring(content)
-    ids = [id_elem.text for id_elem in root.findall('.//Id')]
-    return ids
+    print(f"[EPMC] 최종 쿼리: {epmc_query!r}")
 
-
-def fetch_paper_details(pmids: list) -> list:
-    """PMID 목록으로 논문 상세 정보 수집 (100개씩 배치 처리)"""
     all_papers = []
-    
-    # 100개씩 배치 처리
-    batch_size = 100
-    for i in range(0, len(pmids), batch_size):
-        batch = pmids[i:i + batch_size]
-        
+    next_cursor = None  # 첫 요청은 cursorMark 없이
+
+    while len(all_papers) < max_results:
+        page_size = min(max_results - len(all_papers), 100)
+        # 초록 enrichment 비용을 줄이기 위해 배치당 최대 25개 요청
+        fetch_size = min(page_size, 25)
+        # ✅ sort 파라미터 제거 — 'RELEVANCE' 값이 Europe PMC에서 {'version':'6.9'} 응답 유발
         params = {
-            "db": "pubmed",
-            "id": ",".join(batch),
-            "retmode": "xml",
-            "rettype": "abstract"
+            "query":      epmc_query,
+            "format":     "json",
+            "pageSize":   fetch_size,
+            "resultType": "lite",   # lite: IP 차단 없음
         }
-        
-        content = fetch_with_retry(EFETCH_URL, params)
-        if not content:
-            continue
-        
+        if next_cursor:
+            params["cursorMark"] = next_cursor
+
         try:
-            root = ET.fromstring(content)
-            articles = root.findall('PubmedArticle')
-            
-            for article in articles:
-                paper = parse_article(article)
-                if paper:
-                    all_papers.append(paper)
-        except ET.ParseError:
-            print(f"XML 파싱 오류 (배치 {i})")
-        
-        time.sleep(0.34)  # NCBI Rate limit 준수 (3 req/sec)
-    
-    return all_papers
+            resp = requests.get(EUROPEPMC_SEARCH, params=params, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            print(f"[EPMC] 검색 오류: {e}")
+            break
+
+        # 응답 디버깅
+        hit_count = data.get("hitCount", 0)
+        print(f"[EPMC] hitCount={hit_count}, keys={list(data.keys())}")
+
+        results = data.get("resultList", {}).get("result", [])
+        if not results:
+            print(f"[EPMC] 결과 없음 — 검색 종료")
+            break
+
+        # ① lite 파싱 (pmid 있는 것만 통과)
+        lite_papers = []
+        for r in results:
+            paper = parse_europepmc_lite(r)
+            if paper:  # parse_europepmc_lite가 pmid 없으면 None 반환
+                lite_papers.append(paper)
+
+        print(f"[EPMC] lite 파싱 완료: {len(lite_papers)}편 (pmid 있음)")
+
+        # ② abstract 상세 조회 및 클라이언트 사이드 필터링
+        if lite_papers:
+            enriched = enrich_with_abstracts(lite_papers)
+            # ✅ 클라이언트 사이드 필터링: abstract가 있는 논문만 보관
+            valid = [p for p in enriched if p.get("abstract") and len(p["abstract"]) > 50]
+            print(f"[EPMC] 초록 보강 후 유효 논문: {len(valid)}/{len(enriched)}편")
+            all_papers.extend(valid)
+
+        # ③ 다음 커서
+        nc = data.get("nextCursorMark")
+        if not nc or nc == next_cursor or len(all_papers) >= max_results:
+            break
+        next_cursor = nc
+        time.sleep(0.3)
+
+    print(f"[EPMC] 최종 수집: {len(all_papers[:max_results])}편")
+    return all_papers[:max_results]
 
 
-def parse_article(article_elem) -> dict:
-    """XML PubmedArticle 요소를 딕셔너리로 파싱"""
+def parse_europepmc_lite(r: dict) -> dict:
+    """Europe PMC lite 결과 파싱 (초록 제외) — pmid 없으면 None"""
     try:
-        pmid_elem = article_elem.find('.//PMID')
-        if pmid_elem is None:
+        pmid = str(r.get("pmid", "") or "").strip()
+        # ✅ pmid 없는 경우 → PubMed 소스 아님, 스킵
+        if not pmid or not pmid.isdigit():
             return None
-        pmid = pmid_elem.text
+        
+        pub_types_raw = r.get("pubTypeList", {})
+        pub_types = []
+        if pub_types_raw:
+            pt = pub_types_raw.get("pubType", [])
+            if isinstance(pt, str): pt = [pt]
+            pub_types = [p.lower() for p in (pt or [])]
 
-        # 제목
-        title_elem = article_elem.find('.//ArticleTitle')
-        title = title_elem.text if title_elem is not None else ""
-        if title:
-            title = re.sub(r'<[^>]+>', '', title)
+        return {
+            "pmid":               pmid,
+            "title":              re.sub(r'<[^>]+>', '', r.get("title", "") or "").strip().rstrip("."),
+            "abstract":           "",   # 별도 조회 필요
+            "journal":            r.get("journalTitle", "") or "",
+            "year":               str(r.get("pubYear", "") or ""),
+            "authors":            [],
+            "mesh_terms":         [],
+            "pub_types":          pub_types,
+            "doi":                r.get("doi", "") or "",
+            "url":                f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+            "is_meta_analysis":   any("meta-analysis" in pt for pt in pub_types),
+            "is_systematic_review": any("systematic" in pt for pt in pub_types),
+            "crawled_at":         datetime.now().isoformat(),
+            "source":             "europepmc"
+        }
+    except Exception as e:
+        print(f"lite 파싱 오류: {e}")
+        return None
 
-        # 초록
-        abstract_elem = article_elem.find('.//Abstract')
-        abstract = ""
-        if abstract_elem is not None:
-            abstract = ' '.join(t for t in abstract_elem.itertext()).strip()
-            abstract = re.sub(r'<[^>]+>', '', abstract)
 
-        # 저널
-        journal_elem = article_elem.find('.//Journal/Title')
-        journal = journal_elem.text if journal_elem is not None else ""
+def enrich_with_abstracts(papers: list) -> list:
+    """Europe PMC article API로 초록 상세 조회"""
+    enriched = []
+    for paper in papers:
+        pmid = paper.get("pmid", "")
+        if not pmid:
+            enriched.append(paper)
+            continue
+        try:
+            resp = requests.get(
+                f"https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/{pmid}",
+                params={"format": "json"},
+                timeout=10
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                article = data.get("result", {})
+                if article:
+                    abstract = re.sub(r'<[^>]+>', '', article.get("abstractText", "") or "").strip()
+                    paper["abstract"] = abstract
 
-        # 출판연도
-        year_elem = article_elem.find('.//PubDate/Year')
-        if year_elem is None:
-            year_elem = article_elem.find('.//PubDate/MedlineDate')
-        year = year_elem.text[:4] if year_elem is not None and year_elem.text else ""
+                    # 저자 보강
+                    author_list = article.get("authorList", {}).get("author", [])
+                    if isinstance(author_list, dict): author_list = [author_list]
+                    paper["authors"] = [
+                        a.get("fullName") or f"{a.get('firstName','')} {a.get('lastName','')}".strip()
+                        for a in author_list[:6] if a
+                    ]
+
+                    # MeSH 보강
+                    mesh_terms = []
+                    for mh in article.get("meshHeadingList", {}).get("meshHeading", []):
+                        if isinstance(mh, dict):
+                            mesh_terms.append(mh.get("descriptorName", ""))
+                    paper["mesh_terms"] = [m for m in mesh_terms if m]
+        except Exception:
+            pass
+        enriched.append(paper)
+        time.sleep(0.1)  # Rate limit
+    return enriched
+
+
+def parse_europepmc_result(r: dict) -> dict:
+    """Europe PMC JSON 결과 → 표준 논문 딕셔너리"""
+    try:
+        pmid = str(r.get("pmid", "") or r.get("id", ""))
+        if not pmid:
+            return None
+
+        pub_types = []
+        if r.get("pubTypeList"):
+            pt_list = r["pubTypeList"].get("pubType", [])
+            if isinstance(pt_list, str):
+                pt_list = [pt_list]
+            pub_types = [pt.lower() for pt in pt_list]
 
         # 저자
         authors = []
-        for author in article_elem.findall('.//Author'):
-            lastname = author.find('LastName')
-            firstname = author.find('ForeName')
-            if lastname is not None:
-                name = lastname.text
-                if firstname is not None:
-                    name = f"{firstname.text} {name}"
+        author_list = r.get("authorList", {}).get("author", [])
+        if isinstance(author_list, dict):
+            author_list = [author_list]
+        for a in author_list[:6]:
+            name = a.get("fullName") or f"{a.get('firstName','')} {a.get('lastName','')}".strip()
+            if name:
                 authors.append(name)
 
         # MeSH 용어
         mesh_terms = []
-        for mesh in article_elem.findall('.//MeshHeading/DescriptorName'):
-            mesh_terms.append(mesh.text)
+        for mh in r.get("meshHeadingList", {}).get("meshHeading", []):
+            if isinstance(mh, dict):
+                mesh_terms.append(mh.get("descriptorName", ""))
 
-        # 논문 타입
-        pub_types = []
-        for pt in article_elem.findall('.//PublicationType'):
-            pub_types.append(pt.text)
+        # 초록
+        abstract = r.get("abstractText", "") or ""
+        abstract = re.sub(r'<[^>]+>', '', abstract).strip()
 
         # DOI
         doi = ""
-        for id_elem in article_elem.findall('.//ArticleId'):
-            if id_elem.get('IdType') == 'doi':
-                doi = id_elem.text
+        for dl in r.get("fullTextUrlList", {}).get("fullTextUrl", []):
+            if isinstance(dl, dict) and dl.get("documentStyle") == "doi":
+                doi = dl.get("url", "")
                 break
 
         return {
-            "pmid": pmid,
-            "title": title,
-            "abstract": abstract,
-            "journal": journal,
-            "year": year,
-            "authors": authors,
-            "mesh_terms": mesh_terms,
-            "pub_types": pub_types,
-            "doi": doi,
-            "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
-            "is_meta_analysis": any("Meta-Analysis" in pt for pt in pub_types),
-            "is_systematic_review": any("Systematic Review" in pt for pt in pub_types),
-            "crawled_at": datetime.now().isoformat()
+            "pmid":               pmid,
+            "title":              r.get("title", "").strip().rstrip("."),
+            "abstract":           abstract,
+            "journal":            r.get("journalTitle", "") or r.get("journal", {}).get("title", ""),
+            "year":               str(r.get("pubYear", "") or ""),
+            "authors":            authors,
+            "mesh_terms":         [m for m in mesh_terms if m],
+            "pub_types":          pub_types,
+            "doi":                doi,
+            "url":                f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+            "is_meta_analysis":   any("meta-analysis" in pt.lower() for pt in pub_types),
+            "is_systematic_review": any("systematic" in pt.lower() for pt in pub_types),
+            "crawled_at":         datetime.now().isoformat(),
+            "source":             "europepmc"
         }
     except Exception as e:
         print(f"파싱 오류: {e}")
         return None
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# 메인 크롤링 함수
+# ──────────────────────────────────────────────────────────────────────────────
+
 def build_phytochemical_query(phytochemical: str, health_condition: str = None) -> str:
-    """파이토케미컬 + 건강 조건 검색 쿼리 빌드"""
-    base_query = f'"{phytochemical}"[Title/Abstract]'
+    """파이토케미컬 + 건강 조건 검색 쿼리 빌드 (Europe PMC 형식)"""
+    # 단일 단어 건강 조건 목록 (공백 없는 것 우선)
+    simple_conditions = ["cancer", "diabetes", "obesity", "inflammation", "aging", "hypertension"]
     
     if health_condition:
-        return f'({base_query}) AND ("{health_condition}"[Title/Abstract])'
+        # 공백 포함 조건은 따옴표로 감싸기
+        if " " in health_condition:
+            return f'{phytochemical} AND "{health_condition}"'
+        return f'{phytochemical} AND {health_condition}'
     
-    # 건강 조건 없으면 모든 건강 관련 검색
-    health_query = " OR ".join([f'"{h}"[Title/Abstract]' for h in HEALTH_CONDITIONS[:5]])
-    return f'({base_query}) AND ({health_query})'
+    # 공백 없는 단순 조건만 OR로 묶기
+    health_q = " OR ".join(simple_conditions)
+    return f'{phytochemical} AND ({health_q})'
 
 
 def crawl_phytochemical_papers(
@@ -224,141 +310,121 @@ def crawl_phytochemical_papers(
     progress_callback=None
 ) -> dict:
     """
-    특정 파이토케미컬 관련 논문 크롤링 메인 함수
-    Returns: {papers: [], total: int, meta_count: int, new_count: int}
+    파이토케미컬 관련 논문 크롤링 메인 함수
+    Europe PMC API 우선 사용
     """
     query = build_phytochemical_query(phytochemical, health_condition)
-    
-    if meta_analysis_only:
-        pub_type = "Meta-Analysis"
-    
+
     if progress_callback:
-        progress_callback({"step": "searching", "message": f"PubMed 검색 중: {phytochemical}"})
-    
-    pmids = search_pubmed_ids(query, max_results, pub_type)
-    
-    if not pmids:
-        return {"papers": [], "total": 0, "meta_count": 0, "new_count": 0}
-    
-    # 이미 저장된 PMID 확인
+        progress_callback({"step": "searching",
+                           "message": f"Europe PMC 검색 중: {phytochemical}"})
+
+    papers = search_europepmc(
+        query=query,
+        max_results=max_results,
+        pub_type=pub_type,
+        meta_only=meta_analysis_only
+    )
+
+    if not papers:
+        return {"papers": [], "total": 0, "meta_count": 0,
+                "new_count": 0, "query": query}
+
     existing_pmids = get_existing_pmids()
-    new_pmids = [p for p in pmids if p not in existing_pmids]
-    
+    new_count = sum(1 for p in papers if p["pmid"] not in existing_pmids)
+
     if progress_callback:
         progress_callback({
-            "step": "fetching",
-            "message": f"논문 데이터 수집 중: {len(pmids)}개 발견, {len(new_pmids)}개 신규"
+            "step": "saving",
+            "message": f"{len(papers)}편 수집, {new_count}편 신규 저장 중..."
         })
-    
-    papers = fetch_paper_details(pmids)
-    
-    # 로컬 저장
-    saved_count = save_papers(papers)
-    
+
+    saved = save_papers(papers)
     meta_count = sum(1 for p in papers if p.get("is_meta_analysis"))
-    
+
     if progress_callback:
         progress_callback({
             "step": "complete",
-            "message": f"완료: {len(papers)}개 수집, {meta_count}개 메타분석, {saved_count}개 저장"
+            "message": f"완료: {len(papers)}편 수집 | 메타분석 {meta_count}편 | {saved}편 저장"
         })
-    
+
     return {
-        "papers": papers,
-        "total": len(papers),
+        "papers":     papers,
+        "total":      len(papers),
         "meta_count": meta_count,
-        "new_count": len(new_pmids),
-        "query": query
+        "new_count":  new_count,
+        "query":      query
     }
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# 저장 / 로드 유틸리티
+# ──────────────────────────────────────────────────────────────────────────────
+
 def get_existing_pmids() -> set:
-    """이미 저장된 PMID 세트 반환"""
     pmids = set()
-    
-    # abstracts 폴더에서
     for f in ABSTRACTS_DIR.glob("*.json"):
         pmids.add(f.stem)
-    
-    # 메타데이터 CSV에서
     meta_file = DATA_DIR / "papers_metadata.csv"
     if meta_file.exists():
         try:
             df = pd.read_csv(meta_file)
-            pmids.update(df['pmid'].astype(str).values)
+            pmids.update(df["pmid"].astype(str).values)
         except Exception:
             pass
-    
     return pmids
 
 
 def save_papers(papers: list) -> int:
-    """논문 데이터를 JSON으로 저장 + 메타데이터 CSV 업데이트"""
     saved = 0
-    
     for paper in papers:
         if not paper:
             continue
-        pmid = paper['pmid']
-        
-        # JSON 저장 (전체 데이터)
+        pmid = paper["pmid"]
         json_path = ABSTRACTS_DIR / f"{pmid}.json"
-        with open(json_path, 'w', encoding='utf-8') as f:
+        with open(json_path, "w", encoding="utf-8") as f:
             json.dump(paper, f, ensure_ascii=False, indent=2)
-        
-        # 텍스트 파일도 저장 (호환성)
         txt_path = ABSTRACTS_DIR / f"{pmid}.txt"
-        content = f"Title: {paper['title']}\n\nAbstract: {paper['abstract']}"
-        with open(txt_path, 'w', encoding='utf-8') as f:
-            f.write(content)
-        
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write(f"Title: {paper['title']}\n\nAbstract: {paper['abstract']}")
         saved += 1
-    
-    # 메타데이터 CSV 업데이트
     update_metadata_csv(papers)
-    
     return saved
 
 
 def update_metadata_csv(papers: list):
-    """메타데이터 CSV 업데이트"""
     meta_file = DATA_DIR / "papers_metadata.csv"
-    
-    new_rows = []
+    rows = []
     for p in papers:
         if not p:
             continue
-        new_rows.append({
-            "pmid": p["pmid"],
-            "title": p["title"],
-            "journal": p["journal"],
-            "year": p["year"],
-            "is_meta_analysis": p["is_meta_analysis"],
+        rows.append({
+            "pmid":               p["pmid"],
+            "title":              p["title"],
+            "journal":            p["journal"],
+            "year":               p["year"],
+            "is_meta_analysis":   p["is_meta_analysis"],
             "is_systematic_review": p["is_systematic_review"],
-            "mesh_terms": "|".join(p["mesh_terms"]),
-            "url": p["url"],
-            "crawled_at": p["crawled_at"]
+            "mesh_terms":         "|".join(p["mesh_terms"]),
+            "url":                p["url"],
+            "crawled_at":         p["crawled_at"]
         })
-    
-    if not new_rows:
+    if not rows:
         return
-    
-    new_df = pd.DataFrame(new_rows)
-    
+    new_df = pd.DataFrame(rows)
     if meta_file.exists():
-        existing_df = pd.read_csv(meta_file)
-        combined = pd.concat([existing_df, new_df]).drop_duplicates(subset='pmid')
+        existing = pd.read_csv(meta_file)
+        combined = pd.concat([existing, new_df]).drop_duplicates(subset="pmid")
         combined.to_csv(meta_file, index=False)
     else:
         new_df.to_csv(meta_file, index=False)
 
 
 def load_all_papers() -> list:
-    """저장된 모든 논문 로드"""
     papers = []
-    for json_file in ABSTRACTS_DIR.glob("*.json"):
+    for jf in ABSTRACTS_DIR.glob("*.json"):
         try:
-            with open(json_file, 'r', encoding='utf-8') as f:
+            with open(jf, "r", encoding="utf-8") as f:
                 papers.append(json.load(f))
         except Exception:
             pass
@@ -366,21 +432,17 @@ def load_all_papers() -> list:
 
 
 def get_stats() -> dict:
-    """크롤링 통계 반환"""
     papers = load_all_papers()
-    
-    total = len(papers)
-    meta_count = sum(1 for p in papers if p.get("is_meta_analysis"))
-    sr_count = sum(1 for p in papers if p.get("is_systematic_review"))
-    
-    years = [p.get("year", "") for p in papers if p.get("year")]
+    total  = len(papers)
+    meta   = sum(1 for p in papers if p.get("is_meta_analysis"))
+    sr     = sum(1 for p in papers if p.get("is_systematic_review"))
+    years  = [p.get("year", "") for p in papers if p.get("year")]
     year_dist = {}
     for y in years:
         year_dist[y] = year_dist.get(y, 0) + 1
-    
     return {
-        "total_papers": total,
-        "meta_analysis_count": meta_count,
-        "systematic_review_count": sr_count,
-        "year_distribution": dict(sorted(year_dist.items(), reverse=True)[:10])
+        "total_papers":          total,
+        "meta_analysis_count":   meta,
+        "systematic_review_count": sr,
+        "year_distribution":     dict(sorted(year_dist.items(), reverse=True)[:10])
     }
