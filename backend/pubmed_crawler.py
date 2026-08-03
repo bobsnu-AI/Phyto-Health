@@ -178,7 +178,13 @@ def parse_europepmc_lite(r: dict) -> dict:
 
 
 def enrich_with_abstracts(papers: list) -> list:
-    """Europe PMC article API로 초록 상세 조회"""
+    """
+    Europe PMC article API로 초록 상세 조회
+    
+    전략:
+    1. 개별 article API 시도 → abstractText 필드
+    2. 실패 시 search API에서 abstract 직접 조회 (resultType=lite는 abstract 포함)
+    """
     enriched = []
     for paper in papers:
         pmid = paper.get("pmid", "")
@@ -186,24 +192,29 @@ def enrich_with_abstracts(papers: list) -> list:
             enriched.append(paper)
             continue
         try:
+            # 방법 1: article detail API
             resp = requests.get(
                 f"https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/{pmid}",
                 params={"format": "json"},
-                timeout=10
+                timeout=15
             )
+            abstract = ""
             if resp.status_code == 200:
                 data = resp.json()
-                article = data.get("result", {})
-                if article:
-                    abstract = re.sub(r'<[^>]+>', '', article.get("abstractText", "") or "").strip()
-                    paper["abstract"] = abstract
+                # result 키 또는 최상위에 직접 있을 수 있음
+                article = data.get("result") or data
+                if isinstance(article, dict):
+                    raw = (article.get("abstractText") or
+                           article.get("abstract") or
+                           article.get("body") or "")
+                    abstract = re.sub(r'<[^>]+>', '', str(raw)).strip()
 
                     # 저자 보강
                     author_list = article.get("authorList", {}).get("author", [])
                     if isinstance(author_list, dict): author_list = [author_list]
                     paper["authors"] = [
                         a.get("fullName") or f"{a.get('firstName','')} {a.get('lastName','')}".strip()
-                        for a in author_list[:6] if a
+                        for a in (author_list or [])[:6] if a
                     ]
 
                     # MeSH 보강
@@ -212,10 +223,41 @@ def enrich_with_abstracts(papers: list) -> list:
                         if isinstance(mh, dict):
                             mesh_terms.append(mh.get("descriptorName", ""))
                     paper["mesh_terms"] = [m for m in mesh_terms if m]
-        except Exception:
-            pass
+
+            # 방법 2: abstract 없으면 search API로 재조회 (pmid 직접 검색)
+            if not abstract or len(abstract) < 50:
+                try:
+                    r2 = requests.get(
+                        EUROPEPMC_SEARCH,
+                        params={
+                            "query": f"EXT_ID:{pmid} AND SRC:MED",
+                            "format": "json",
+                            "pageSize": 1,
+                            "resultType": "core"
+                        },
+                        timeout=15
+                    )
+                    if r2.status_code == 200:
+                        d2 = r2.json()
+                        results2 = d2.get("resultList", {}).get("result", [])
+                        if results2:
+                            raw2 = results2[0].get("abstractText", "") or ""
+                            ab2 = re.sub(r'<[^>]+>', '', raw2).strip()
+                            if len(ab2) > len(abstract):
+                                abstract = ab2
+                except Exception:
+                    pass
+
+            if abstract:
+                paper["abstract"] = abstract
+                print(f"  ✓ PMID:{pmid} abstract {len(abstract)}chars")
+            else:
+                print(f"  ✗ PMID:{pmid} abstract 없음")
+
+        except Exception as e:
+            print(f"  ! PMID:{pmid} enrich 오류: {e}")
         enriched.append(paper)
-        time.sleep(0.1)  # Rate limit
+        time.sleep(0.15)  # Rate limit
     return enriched
 
 
