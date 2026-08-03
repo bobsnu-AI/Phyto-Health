@@ -15,6 +15,18 @@ from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+# ─── Genspark LLM 프록시 설정 ─────────────────────────────────────────────────
+# 환경변수 OPENAI_API_KEY / OPENAI_BASE_URL 이 주입돼 있으면 그것을 우선 사용
+# (Genspark 프록시: https://www.genspark.ai/api/llm_proxy/v1)
+_ENV_OPENAI_KEY  = os.environ.get("GSK_TOKEN", "") or os.environ.get("OPENAI_API_KEY", "")
+_ENV_OPENAI_BASE = os.environ.get("OPENAI_BASE_URL", "")
+
+def resolve_openai_key(ui_key: str = "") -> tuple[str, str]:
+    """(api_key, base_url) 반환 — 환경변수 우선, 없으면 UI 입력값 사용"""
+    key  = _ENV_OPENAI_KEY  or ui_key
+    base = _ENV_OPENAI_BASE or ""
+    return key, base
+
 # 모듈 임포트
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
@@ -65,24 +77,25 @@ class CrawlRequest(BaseModel):
 class BuildGraphRequest(BaseModel):
     use_all_papers: bool = True
     pmids: Optional[list] = None
-    openai_api_key: str
+    openai_api_key: Optional[str] = ""  # UI 입력 (없으면 환경변수 사용)
 
 
 class ChatRequest(BaseModel):
     message: str
     chat_history: Optional[list] = []
-    openai_api_key: str
+    openai_api_key: Optional[str] = ""  # UI 입력 (없으면 환경변수 사용)
 
 
 class IndexRequest(BaseModel):
-    openai_api_key: str
+    openai_api_key: Optional[str] = ""  # UI 입력 (없으면 환경변수 사용)
 
 
 # ─── 유틸리티 ─────────────────────────────────────────────────────────────────
-def get_or_create_chatbot(api_key: str) -> RAGChatbot:
+def get_or_create_chatbot(api_key: str = "") -> RAGChatbot:
     global chatbot_instance
+    key, base = resolve_openai_key(api_key)
     if chatbot_instance is None:
-        chatbot_instance = RAGChatbot(api_key)
+        chatbot_instance = RAGChatbot(key, base_url=base)
     return chatbot_instance
 
 
@@ -222,7 +235,12 @@ async def build_graph(request: BuildGraphRequest, background_tasks: BackgroundTa
     def do_build():
         from openai import OpenAI
         try:
-            client = OpenAI(api_key=request.openai_api_key)
+            key, base = resolve_openai_key(request.openai_api_key or "")
+            client = OpenAI(
+                api_key=key,
+                base_url=base or None  # None이면 기본 OpenAI 엔드포인트
+            )
+            print(f"[GraphBuild] base_url={base!r}, key_prefix={key[:8]}...")
             
             if request.use_all_papers:
                 papers = load_all_papers()
@@ -307,7 +325,7 @@ async def index_documents(request: IndexRequest, background_tasks: BackgroundTas
     
     def do_index():
         try:
-            chatbot = get_or_create_chatbot(request.openai_api_key)
+            chatbot = get_or_create_chatbot(request.openai_api_key or "")
             count = chatbot.index_from_files(update_progress)
             index_progress[task_id] = {
                 "status": "complete",

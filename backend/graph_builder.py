@@ -92,7 +92,7 @@ def extract_graph_entities(paper: dict, openai_client: OpenAI) -> dict:
     
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-5-mini",
             messages=[
                 {"role": "system", "content": "생의학 엔티티 추출 전문가. 반드시 유효한 JSON만 반환."},
                 {"role": "user", "content": EXTRACTION_PROMPT + text[:3000]}
@@ -101,13 +101,26 @@ def extract_graph_entities(paper: dict, openai_client: OpenAI) -> dict:
             max_tokens=1500
         )
         
-        content = response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        if not content:
+            return {"entities": [], "relations": []}
+        content = content.strip()
         
         # JSON 추출 (마크다운 코드블록 제거)
         if "```json" in content:
             content = content.split("```json")[1].split("```")[0].strip()
         elif "```" in content:
             content = content.split("```")[1].split("```")[0].strip()
+        
+        # 빈 응답 처리
+        if not content or content in ("", "null", "{}"):
+            return {"entities": [], "relations": []}
+        
+        # { } 로 시작하지 않으면 JSON 블록 찾기
+        if not content.startswith("{") and not content.startswith("["):
+            start = content.find("{")
+            if start >= 0:
+                content = content[start:]
         
         result = json.loads(content)
         

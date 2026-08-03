@@ -39,8 +39,15 @@ PubMed 논문 데이터베이스를 기반으로 정확하고 신뢰할 수 있�
 
 
 class RAGChatbot:
-    def __init__(self, openai_api_key: str):
-        self.client = OpenAI(api_key=openai_api_key)
+    def __init__(self, openai_api_key: str, base_url: str = ""):
+        # Genspark 프록시 우선, 없으면 공식 OpenAI
+        _base = base_url or os.environ.get("OPENAI_BASE_URL", "") or None
+        # API 키 우선순위: GSK_TOKEN > OPENAI_API_KEY > UI 입력값
+        _key  = (os.environ.get("GSK_TOKEN", "") or
+                 os.environ.get("OPENAI_API_KEY", "") or
+                 openai_api_key)
+        self.client = OpenAI(api_key=_key, base_url=_base)
+        print(f"[RAGChatbot] base_url={_base!r}, key_prefix={_key[:8]}...")
         self.chroma_client = chromadb.PersistentClient(
             path=str(CHROMA_DIR)
         )
@@ -59,12 +66,12 @@ class RAGChatbot:
             print("✅ 새 컬렉션 생성")
     
     def get_embedding(self, text: str) -> list:
-        """OpenAI 임베딩 생성"""
-        response = self.client.embeddings.create(
-            model="text-embedding-3-small",
-            input=text[:8000]
-        )
-        return response.data[0].embedding
+        """ChromaDB 내장 임베딩 사용 (sentence-transformers all-MiniLM-L6-v2)
+        OpenAI 임베딩 API 불필요 — 로컬에서 직접 실행
+        """
+        # ChromaDB query_texts 방식을 사용하므로 이 함수는 직접 호출 안 됨
+        # retrieve()에서 query_texts=[query] 로 자동 임베딩
+        raise NotImplementedError("get_embedding은 사용하지 않습니다. retrieve()를 직접 호출하세요.")
     
     def index_papers(self, papers: list, progress_callback=None) -> int:
         """논문 목록을 벡터DB에 인덱싱"""
@@ -92,7 +99,6 @@ class RAGChatbot:
             batch = new_papers[i:i + batch_size]
             
             documents = []
-            embeddings = []
             metadatas = []
             ids = []
             
@@ -103,14 +109,7 @@ class RAGChatbot:
                 # 인덱싱 텍스트: 제목 + 초록
                 doc_text = f"Title: {paper.get('title', '')}\n\nAbstract: {paper.get('abstract', '')}"
                 
-                try:
-                    embedding = self.get_embedding(doc_text)
-                except Exception as e:
-                    print(f"임베딩 오류: {e}")
-                    continue
-                
                 documents.append(doc_text[:2000])
-                embeddings.append(embedding)
                 metadatas.append({
                     "pmid": str(paper.get('pmid', '')),
                     "title": paper.get('title', '')[:500],
@@ -132,9 +131,9 @@ class RAGChatbot:
                     })
             
             if documents:
+                # ✅ embeddings 파라미터 제거 — ChromaDB가 자체 임베딩 생성
                 self.collection.add(
                     documents=documents,
-                    embeddings=embeddings,
                     metadatas=metadatas,
                     ids=ids
                 )
@@ -159,10 +158,9 @@ class RAGChatbot:
             return []
         
         try:
-            query_embedding = self.get_embedding(query)
-            
+            # ✅ query_texts 사용 — ChromaDB 내장 임베딩으로 자동 변환
             results = self.collection.query(
-                query_embeddings=[query_embedding],
+                query_texts=[query],
                 n_results=min(n_results, self.collection.count()),
                 include=["documents", "metadatas", "distances"]
             )
@@ -226,7 +224,7 @@ class RAGChatbot:
         
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-5-mini",
                 messages=messages,
                 temperature=0.3,
                 max_tokens=1500
