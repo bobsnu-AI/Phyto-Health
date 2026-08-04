@@ -382,9 +382,7 @@
       </div>
     </div>
     <div class="api-key-area">
-      <i class="fas fa-key" style="color:#94a3b8;font-size:0.82rem"></i>
-      <input type="password" id="apiKeyInput" placeholder="OpenAI API Key (sk-...)" oninput="handleApiKeyInput()">
-      <span class="badge-key no" id="apiKeyBadge">미설정</span>
+      <span class="badge-key ok" style="font-size:0.78rem">🔑 서버 키 사용 중</span>
     </div>
   </div>
 </header>
@@ -915,8 +913,7 @@ const EDGE_COLORS = {
 //   초기화
 // ════════════════════════════════════════
 window.addEventListener('load', () => {
-  const saved = localStorage.getItem('oai_key');
-  if (saved) { document.getElementById('apiKeyInput').value = saved; handleApiKeyInput(); }
+  // API 키는 서버 환경변수(GSK_TOKEN)로 관리 — UI 입력 불필요
   loadStats();
   loadPapers(1);
   loadGraph();
@@ -926,18 +923,10 @@ window.addEventListener('load', () => {
 // ════════════════════════════════════════
 //   API Key
 // ════════════════════════════════════════
-function getApiKey() { return document.getElementById('apiKeyInput').value.trim(); }
-function handleApiKeyInput() {
-  const key = getApiKey(), badge = document.getElementById('apiKeyBadge');
-  if (key.startsWith('sk-') && key.length > 20) {
-    badge.textContent = '✓ 설정됨'; badge.className = 'badge-key ok';
-    localStorage.setItem('oai_key', key);
-  } else { badge.textContent = '미설정'; badge.className = 'badge-key no'; }
-}
-function requireApiKey() {
-  if (!getApiKey().startsWith('sk-')) { showToast('상단에 OpenAI API Key를 입력하세요', 'error'); return false; }
-  return true;
-}
+// API 키는 서버 환경변수(GSK_TOKEN)로 관리 — UI 입력 불필요
+function getApiKey() { return ''; }  // 서버에서 GSK_TOKEN 사용
+function handleApiKeyInput() {}
+function requireApiKey() { return true; }  // 항상 통과
 
 // ════════════════════════════════════════
 //   탭 전환
