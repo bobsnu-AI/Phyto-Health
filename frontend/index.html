@@ -12,167 +12,291 @@
     :root {
       --primary: #16a34a;
       --primary-dark: #15803d;
+      --primary-light: #22c55e;
       --accent: #0ea5e9;
       --bg: #0f172a;
       --surface: #1e293b;
       --surface2: #334155;
+      --surface3: #2d3f55;
       --text: #f1f5f9;
       --text-muted: #94a3b8;
       --border: #334155;
+      --border-light: #3d5166;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
 
     /* ── 헤더 ── */
     header { background: linear-gradient(135deg, #064e3b 0%, #0f172a 60%); border-bottom: 1px solid #065f46; padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
-    .header-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; }
-    .logo { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; font-weight: 700; color: #34d399; }
-    .logo i { font-size: 1.5rem; }
+    .header-inner { max-width: 1600px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; color: #34d399; }
+    .logo i { font-size: 1.4rem; }
+    .logo-sub { font-size: 0.6rem; color: #6ee7b7; font-weight: 400; }
     .api-key-area { display: flex; align-items: center; gap: 8px; }
-    .api-key-area input { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; width: 220px; }
+    .api-key-area input { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; width: 200px; }
     .api-key-area input:focus { outline: 2px solid var(--primary); }
-    .badge-key { font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+    .badge-key { font-size: 0.68rem; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
     .badge-key.ok { background: #065f46; color: #34d399; }
     .badge-key.no { background: #7f1d1d; color: #fca5a5; }
 
     /* ── 탭 네비 ── */
     nav { background: var(--surface); border-bottom: 1px solid var(--border); }
-    .nav-inner { max-width: 1400px; margin: 0 auto; display: flex; gap: 0; overflow-x: auto; }
-    .tab-btn { padding: 14px 24px; font-size: 0.9rem; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--text-muted); white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
+    .nav-inner { max-width: 1600px; margin: 0 auto; display: flex; gap: 0; overflow-x: auto; }
+    .tab-btn { padding: 13px 22px; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--text-muted); white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
     .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
     .tab-btn.active { color: #34d399; border-bottom-color: #34d399; background: rgba(52,211,153,0.07); }
     .tab-btn i { margin-right: 6px; }
 
     /* ── 메인 레이아웃 ── */
-    main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+    main { max-width: 1600px; margin: 0 auto; padding: 1.5rem 2rem; }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
     /* ── 카드 ── */
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
-    .card-title { font-size: 1rem; font-weight: 700; color: #34d399; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+    .card-title { font-size: 0.95rem; font-weight: 700; color: #34d399; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
 
     /* ── 버튼 ── */
-    .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 0.9rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn { padding: 9px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 0.875rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
     .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:hover { background: var(--primary-dark); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .btn-secondary { background: var(--surface2); color: var(--text); }
     .btn-secondary:hover { background: #475569; }
     .btn-danger { background: #dc2626; color: white; }
     .btn-accent { background: #0284c7; color: white; }
+    .btn-accent:hover { background: #0369a1; }
+    .btn-teal { background: #0d9488; color: white; }
+    .btn-teal:hover { background: #0f766e; }
+    .btn-purple { background: #7c3aed; color: white; }
+    .btn-purple:hover { background: #6d28d9; }
     .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+    .btn-xs { padding: 4px 9px; font-size: 0.75rem; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--border-light); }
+    .btn-icon { padding: 7px 10px; border-radius: 8px; }
 
     /* ── 폼 요소 ── */
-    .input, .select { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; }
-    .input:focus, .select:focus { outline: 2px solid var(--primary); }
+    .input, .select { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 13px; font-size: 0.875rem; }
+    .input:focus, .select:focus { outline: 2px solid var(--primary); border-color: transparent; }
     .select option { background: var(--surface); }
-    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
-    label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block; }
-    .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; }
-    .checkbox-row input { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; }
+    label { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 4px; display: block; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; cursor: pointer; }
+    .checkbox-row input { accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer; }
 
     /* ── 프로그레스 ── */
-    .progress-wrap { background: #0f172a; border-radius: 8px; overflow: hidden; height: 8px; }
+    .progress-wrap { background: #0f172a; border-radius: 8px; overflow: hidden; height: 7px; }
     .progress-bar { height: 100%; background: linear-gradient(90deg, #16a34a, #34d399); transition: width 0.4s; }
-    .status-msg { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+    .status-msg { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; }
+    @keyframes pulseWidth { 0%,100%{width:10%}50%{width:60%} }
 
     /* ── 논문 카드 ── */
-    .paper-card { background: #0f172a; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem; transition: border-color 0.2s; }
-    .paper-card:hover { border-color: #16a34a; }
-    .paper-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; line-height: 1.4; }
-    .paper-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; color: var(--text-muted); }
-    .badge { padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
-    .badge-meta { background: #1e40af; color: #93c5fd; }
-    .badge-sr { background: #5b21b6; color: #c4b5fd; }
+    .paper-card { background: #0f172a; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-bottom: 0.6rem; transition: border-color 0.2s, transform 0.15s; }
+    .paper-card:hover { border-color: #16a34a; transform: translateX(2px); }
+    .paper-title { font-weight: 600; font-size: 0.875rem; margin-bottom: 6px; line-height: 1.45; }
+    .paper-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.73rem; color: var(--text-muted); align-items: center; }
+    .badge { padding: 2px 8px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; }
+    .badge-meta { background: #1e3a8a; color: #93c5fd; }
+    .badge-sr { background: #4c1d95; color: #c4b5fd; }
+    .badge-rct { background: #14532d; color: #86efac; }
     .badge-year { background: var(--surface2); color: var(--text-muted); }
-    .paper-abstract { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .badge-journal { background: #1c3148; color: #7dd3fc; }
+    .paper-abstract { font-size: 0.79rem; color: var(--text-muted); margin-top: 8px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-    /* ── 그래프 ── */
-    #graph-container { background: #0a0f1e; border: 1px solid var(--border); border-radius: 12px; width: 100%; height: 600px; position: relative; overflow: hidden; }
+    /* ════════════════════════════════════════
+       그래프 전용 레이아웃
+    ════════════════════════════════════════ */
+    .graph-workspace { display: grid; grid-template-columns: 260px 1fr; gap: 1.25rem; align-items: start; }
+    @media(max-width:900px){ .graph-workspace { grid-template-columns: 1fr; } }
+
+    /* 좌측 필터 패널 */
+    .graph-sidebar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; position: sticky; top: 80px; }
+    .sidebar-section { margin-bottom: 1.1rem; padding-bottom: 1.1rem; border-bottom: 1px solid var(--border); }
+    .sidebar-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .sidebar-title { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 5px; }
+
+    /* 노드 타입 체크박스 칩 */
+    .node-type-chips { display: flex; flex-direction: column; gap: 5px; }
+    .node-chip { display: flex; align-items: center; gap: 7px; padding: 6px 9px; border-radius: 7px; cursor: pointer; transition: background 0.15s; font-size: 0.8rem; border: 1px solid transparent; }
+    .node-chip:hover { background: var(--surface2); }
+    .node-chip.active { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.3); }
+    .node-chip input[type=checkbox] { accent-color: var(--primary); }
+    .chip-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .chip-count { margin-left: auto; font-size: 0.68rem; background: var(--surface2); border-radius: 10px; padding: 1px 6px; color: var(--text-muted); }
+
+    /* 관계 타입 체크박스 */
+    .rel-chips { display: flex; flex-direction: column; gap: 4px; }
+    .rel-chip { display: flex; align-items: center; gap: 7px; padding: 5px 9px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; border: 1px solid transparent; transition: background 0.15s; }
+    .rel-chip:hover { background: var(--surface2); }
+    .rel-chip.active { background: rgba(14,165,233,0.1); border-color: rgba(14,165,233,0.25); }
+    .rel-chip input[type=checkbox] { accent-color: #0ea5e9; }
+    .rel-dot { width: 8px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+
+    /* 그래프 우측 메인 영역 */
+    .graph-main { min-width: 0; }
+    .graph-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .graph-toolbar .input { width: 160px; }
+
+    #graph-container { background: #060d1a; border: 1px solid var(--border); border-radius: 12px; width: 100%; height: 580px; position: relative; overflow: hidden; }
     #graph-svg { width: 100%; height: 100%; }
-    .node circle { cursor: pointer; transition: r 0.2s; }
-    .node:hover circle { filter: brightness(1.4); }
-    .node text { font-size: 11px; fill: #e2e8f0; pointer-events: none; text-shadow: 0 1px 3px #000; }
-    .link { stroke-opacity: 0.6; }
-    .link-label { font-size: 9px; fill: #94a3b8; }
-    
-    .graph-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-    
-    .graph-tooltip { position: absolute; background: rgba(15,23,42,0.95); border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; pointer-events: none; max-width: 260px; z-index: 50; display: none; line-height: 1.5; }
+    .node circle { cursor: pointer; transition: r 0.15s, filter 0.15s; }
+    .node:hover circle { filter: brightness(1.5) drop-shadow(0 0 6px currentColor); }
+    .node.focused circle { stroke: #fbbf24 !important; stroke-width: 3px !important; }
+    .node.dimmed { opacity: 0.15; }
+    .link { stroke-opacity: 0.55; transition: stroke-opacity 0.2s; }
+    .link.highlighted { stroke-opacity: 1 !important; stroke-width: 3px !important; }
+    .link.dimmed { stroke-opacity: 0.05; }
+    .link-label { font-size: 8.5px; fill: #64748b; pointer-events: none; }
+    .link-label.visible { fill: #94a3b8; }
+
+    /* 미니맵 */
+    #minimap { position: absolute; bottom: 12px; right: 12px; width: 140px; height: 90px; background: rgba(15,23,42,0.88); border: 1px solid var(--border-light); border-radius: 8px; overflow: hidden; }
+    #minimap-svg { width: 100%; height: 100%; }
+    .minimap-node { opacity: 0.8; }
+    .minimap-viewport { fill: rgba(52,211,153,0.08); stroke: #34d399; stroke-width: 1; }
+
+    /* 그래프 컨트롤 오버레이 */
+    .graph-controls { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 5px; }
+    .graph-ctrl-btn { width: 30px; height: 30px; background: rgba(30,41,59,0.9); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); font-size: 0.8rem; transition: all 0.15s; }
+    .graph-ctrl-btn:hover { background: var(--surface2); color: var(--text); }
+    .graph-ctrl-btn.active { background: rgba(52,211,153,0.2); color: #34d399; border-color: #34d399; }
+
+    /* 그래프 툴팁 */
+    .graph-tooltip { position: absolute; background: rgba(10,16,32,0.97); border: 1px solid var(--border-light); border-radius: 10px; padding: 10px 13px; font-size: 0.8rem; pointer-events: none; max-width: 240px; z-index: 50; display: none; line-height: 1.5; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+
+    /* 범례 */
+    .graph-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.73rem; color: var(--text-muted); }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+    /* 노드 상세 패널 */
+    .node-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .neighbor-list { display: flex; flex-direction: column; gap: 5px; max-height: 200px; overflow-y: auto; }
+    .neighbor-item { display: flex; align-items: center; gap: 7px; padding: 6px 8px; background: #0f172a; border-radius: 7px; font-size: 0.8rem; cursor: pointer; border: 1px solid transparent; transition: border-color 0.15s; }
+    .neighbor-item:hover { border-color: var(--primary); }
+    .neighbor-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .edge-badge { padding: 2px 6px; border-radius: 6px; font-size: 0.65rem; font-weight: 700; }
+    .detail-stat { background: #0f172a; border-radius: 8px; padding: 10px 12px; text-align: center; }
+    .detail-stat-num { font-size: 1.5rem; font-weight: 800; color: #34d399; }
+    .detail-stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* 그래프 통계 */
+    .graph-stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.75rem; margin-top: 0.9rem; }
+    .g-stat { background: #0f172a; border-radius: 9px; padding: 0.9rem; text-align: center; border: 1px solid var(--border); }
+    .g-stat-num { font-size: 1.6rem; font-weight: 800; color: #34d399; }
+    .g-stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; }
 
     /* ── 챗봇 ── */
-    #chat-messages { height: 450px; overflow-y: auto; padding: 1rem; background: #0a0f1e; border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
-    .msg-bubble { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.875rem; line-height: 1.6; }
+    #chat-messages { height: 440px; overflow-y: auto; padding: 1rem; background: #060d1a; border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+    .msg-bubble { max-width: 86%; padding: 10px 14px; border-radius: 12px; font-size: 0.875rem; line-height: 1.65; }
     .msg-user { background: #164e63; color: #e0f2fe; align-self: flex-end; border-bottom-right-radius: 4px; }
     .msg-bot { background: var(--surface); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--border); }
-    .msg-sources { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+    .msg-sources { font-size: 0.73rem; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
     .source-link { color: #34d399; text-decoration: none; }
     .source-link:hover { text-decoration: underline; }
     .msg-thinking { align-self: flex-start; padding: 10px 16px; }
-    .dots span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #34d399; margin: 0 2px; animation: bounce 1.2s infinite; }
+    .dots span { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #34d399; margin: 0 2px; animation: bounce 1.2s infinite; }
     .dots span:nth-child(2) { animation-delay: 0.2s; }
     .dots span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
-
-    .chat-input-area { display: flex; gap: 10px; margin-top: 12px; }
-    .chat-input { flex: 1; background: #0f172a; border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 12px 16px; font-size: 0.9rem; resize: none; }
+    .chat-input-area { display: flex; gap: 10px; margin-top: 10px; }
+    .chat-input { flex: 1; background: #0f172a; border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 11px 15px; font-size: 0.875rem; resize: none; }
     .chat-input:focus { outline: 2px solid var(--primary); }
 
     /* ── 통계 카드 ── */
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
-    .stat-card { background: #0f172a; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; text-align: center; }
-    .stat-num { font-size: 2rem; font-weight: 800; color: #34d399; }
-    .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.9rem; }
+    .stat-card { background: #0f172a; border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem; text-align: center; }
+    .stat-num { font-size: 1.9rem; font-weight: 800; color: #34d399; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
 
     /* ── 토스트 ── */
-    #toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 12px 20px; font-size: 0.875rem; z-index: 999; opacity: 0; transform: translateY(20px); transition: all 0.3s; pointer-events: none; }
+    #toast { position: fixed; bottom: 22px; right: 22px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 11px 18px; font-size: 0.85rem; z-index: 999; opacity: 0; transform: translateY(20px); transition: all 0.3s; pointer-events: none; max-width: 320px; }
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.success { border-color: #16a34a; color: #34d399; }
     #toast.error { border-color: #dc2626; color: #fca5a5; }
+    #toast.info { border-color: #0284c7; color: #7dd3fc; }
 
     /* ── 페이지네이션 ── */
-    .pagination { display: flex; gap: 6px; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
-    .page-btn { padding: 6px 12px; border-radius: 6px; background: var(--surface2); color: var(--text-muted); border: none; cursor: pointer; font-size: 0.8rem; }
+    .pagination { display: flex; gap: 5px; justify-content: center; margin-top: 0.9rem; flex-wrap: wrap; }
+    .page-btn { padding: 6px 11px; border-radius: 6px; background: var(--surface2); color: var(--text-muted); border: none; cursor: pointer; font-size: 0.78rem; }
     .page-btn.active { background: var(--primary); color: white; }
     .page-btn:hover:not(.active) { background: #475569; }
 
-    /* ── 반응형 ── */
-    @media (max-width: 768px) {
-      main { padding: 1rem; }
-      .form-row { grid-template-columns: 1fr; }
-      .stat-grid { grid-template-columns: repeat(2, 1fr); }
-      #graph-container { height: 400px; }
-      #chat-messages { height: 350px; }
-    }
+    /* ── 검색/필터바 ── */
+    .search-bar { display: flex; gap: 8px; margin-bottom: 0.9rem; }
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0.9rem; align-items: center; }
+    .filter-select { background: #0f172a; border: 1px solid var(--border); color: var(--text); border-radius: 7px; padding: 6px 10px; font-size: 0.8rem; }
+    .filter-select:focus { outline: 1px solid var(--primary); }
+
+    /* ── 섹션 헤더 ── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; flex-wrap: wrap; gap: 8px; }
+    .section-title { font-size: 1rem; font-weight: 700; }
+    .count-badge { background: var(--surface2); border-radius: 20px; padding: 3px 10px; font-size: 0.73rem; color: var(--text-muted); }
 
     /* ── 스크롤바 ── */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
     /* ── 빈 상태 ── */
     .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
-    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
-    .empty-state p { font-size: 0.9rem; }
+    .empty-state i { font-size: 2.8rem; margin-bottom: 0.9rem; opacity: 0.35; display: block; }
+    .empty-state p { font-size: 0.875rem; line-height: 1.6; }
 
-    /* ── 로딩 스피너 ── */
-    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #ffffff40; border-top-color: #34d399; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    /* ── 스피너 ── */
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #ffffff30; border-top-color: #34d399; border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── 검색창 ── */
-    .search-bar { display: flex; gap: 8px; margin-bottom: 1rem; }
-    .search-bar input { flex: 1; }
+    /* ── 워크플로우 스텝 ── */
+    .workflow-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.9rem; }
+    .workflow-step { text-align: center; padding: 1rem 0.8rem; }
+    .step-num { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 9px; font-size: 1.1rem; font-weight: 700; }
+    .step-title { font-weight: 600; margin-bottom: 3px; font-size: 0.875rem; }
+    .step-desc { font-size: 0.73rem; color: var(--text-muted); }
 
-    /* ── 섹션 헤더 ── */
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-    .section-title { font-size: 1.1rem; font-weight: 700; }
-    .count-badge { background: var(--surface2); border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; color: var(--text-muted); }
+    /* ── 반응형 ── */
+    @media (max-width: 768px) {
+      main { padding: 1rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(2,1fr); }
+      #graph-container { height: 400px; }
+      #chat-messages { height: 340px; }
+      .graph-stat-row { grid-template-columns: repeat(2,1fr); }
+      .node-detail-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── 푸드소스 뷰 토글 하이라이트 ── */
+    .view-btn.active-view { background: #ff9800 !important; color: #000 !important; }
+    .phyto-focus-btn.active-view { background: var(--primary) !important; color: white !important; }
+
+    /* 논문 확장 보기 */
+    .paper-card .abstract-full { display: none; -webkit-line-clamp: unset; }
+    .paper-card.expanded .paper-abstract { display: none; }
+    .paper-card.expanded .abstract-full { display: block; font-size: 0.79rem; color: var(--text-muted); margin-top: 8px; line-height: 1.55; }
+    .expand-btn { font-size: 0.72rem; color: #34d399; cursor: pointer; margin-top: 5px; display: inline-block; }
+    .expand-btn:hover { text-decoration: underline; }
+
+    /* 그래프 빈 상태 */
+    #graphEmpty { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color:var(--text-muted); }
+    #graphEmpty i { font-size:2.8rem; opacity:0.25; display:block; margin-bottom:0.9rem; }
+    #graphEmpty p { font-size:0.875rem; }
+
+    /* 활성 필터 태그 */
+    .active-filter-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 0.7rem; }
+    .filter-tag { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); color: #34d399; border-radius: 20px; padding: 3px 10px; font-size: 0.72rem; display: flex; align-items: center; gap: 5px; }
+    .filter-tag-remove { cursor: pointer; opacity: 0.7; }
+    .filter-tag-remove:hover { opacity: 1; }
+
+    /* 탭 내 서브탭 (논문 DB) */
+    .subtab-bar { display: flex; gap: 5px; margin-bottom: 1rem; background: #0f172a; border-radius: 8px; padding: 4px; }
+    .subtab-btn { flex: 1; padding: 7px; text-align: center; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 500; color: var(--text-muted); transition: all 0.15s; border: none; background: none; }
+    .subtab-btn.active { background: var(--primary); color: white; }
+    .subtab-btn:hover:not(.active) { background: var(--surface2); color: var(--text); }
+
+    /* 그래프 구축 진행 */
+    #graphBuildProgress { margin-bottom: 0.9rem; }
   </style>
 </head>
 <body>
@@ -184,11 +308,11 @@
       <i class="fas fa-dna"></i>
       <div>
         <span>PhytoGraph</span>
-        <div style="font-size:0.65rem;color:#6ee7b7;font-weight:400">파이토케미컬 연구 인텔리전스 플랫폼</div>
+        <div class="logo-sub">파이토케미컬 연구 인텔리전스 플랫폼</div>
       </div>
     </div>
     <div class="api-key-area">
-      <i class="fas fa-key" style="color:#94a3b8;font-size:0.85rem"></i>
+      <i class="fas fa-key" style="color:#94a3b8;font-size:0.82rem"></i>
       <input type="password" id="apiKeyInput" placeholder="OpenAI API Key (sk-...)" oninput="handleApiKeyInput()">
       <span class="badge-key no" id="apiKeyBadge">미설정</span>
     </div>
@@ -202,13 +326,13 @@
       <i class="fas fa-satellite-dish"></i> 실시간 크롤링
     </button>
     <button class="tab-btn" onclick="switchTab(this,'papers')">
-      <i class="fas fa-file-medical-alt"></i> 논문 데이터베이스
+      <i class="fas fa-database"></i> 논문 DB
     </button>
     <button class="tab-btn" onclick="switchTab(this,'graph')">
       <i class="fas fa-project-diagram"></i> 지식 그래프
     </button>
     <button class="tab-btn" onclick="switchTab(this,'chatbot')">
-      <i class="fas fa-robot"></i> AI 연구 어시스턴트
+      <i class="fas fa-robot"></i> AI 어시스턴트
     </button>
   </div>
 </nav>
@@ -220,8 +344,7 @@
 ═══════════════════════════════════════════════════ -->
 <div id="tab-crawl" class="tab-panel active">
 
-  <!-- 통계 요약 -->
-  <div class="stat-grid" style="margin-bottom:1.5rem" id="statsGrid">
+  <div class="stat-grid" style="margin-bottom:1.25rem" id="statsGrid">
     <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">수집된 총 논문</div></div>
     <div class="stat-card"><div class="stat-num" id="stat-meta">0</div><div class="stat-label">메타분석 논문</div></div>
     <div class="stat-card"><div class="stat-num" id="stat-graph-nodes">0</div><div class="stat-label">그래프 노드</div></div>
@@ -229,14 +352,13 @@
     <div class="stat-card"><div class="stat-num" id="stat-indexed">0</div><div class="stat-label">인덱싱 완료</div></div>
   </div>
 
-  <!-- 크롤링 설정 -->
   <div class="card">
     <div class="card-title"><i class="fas fa-search"></i> PubMed 크롤링 설정</div>
     
     <div class="form-row" style="margin-bottom:1rem">
       <div>
         <label>파이토케미컬 (직접 입력 또는 선택)</label>
-        <input class="input" id="phytoInput" placeholder="예: curcumin, quercetin, resveratrol...">
+        <input class="input" id="phytoInput" placeholder="예: curcumin, quercetin...">
       </div>
       <div>
         <label>빠른 선택</label>
@@ -257,9 +379,6 @@
           </optgroup>
           <optgroup label="Isoflavones">
             <option>genistein</option><option>daidzein</option>
-          </optgroup>
-          <optgroup label="Organosulfur">
-            <option>allicin</option><option>sulforaphane</option>
           </optgroup>
         </select>
       </div>
@@ -301,29 +420,25 @@
       </div>
     </div>
 
-    <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="startCrawl()" id="crawlBtn">
         <i class="fas fa-satellite-dish"></i> 크롤링 시작
       </button>
-      <span class="checkbox-row">
+      <label class="checkbox-row">
         <input type="checkbox" id="metaOnlyCheck">
-        <label for="metaOnlyCheck" style="margin:0;cursor:pointer">메타분석 논문만</label>
-      </span>
+        <span>메타분석 논문만</span>
+      </label>
     </div>
 
-    <!-- 진행 상황 -->
-    <div id="crawlProgress" style="display:none;margin-top:1.5rem">
-      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:6px">
+    <div id="crawlProgress" style="display:none;margin-top:1.25rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:5px">
         <span id="crawlStatusText">준비 중...</span>
         <span id="crawlPercent" style="color:#34d399">0%</span>
       </div>
-      <div class="progress-wrap">
-        <div class="progress-bar" id="crawlProgressBar" style="width:0%"></div>
-      </div>
+      <div class="progress-wrap"><div class="progress-bar" id="crawlProgressBar" style="width:0%"></div></div>
     </div>
   </div>
 
-  <!-- 크롤링 결과 미리보기 -->
   <div class="card" id="crawlResultCard" style="display:none">
     <div class="card-title"><i class="fas fa-check-circle"></i> 크롤링 결과</div>
     <div class="stat-grid" style="margin-bottom:1rem">
@@ -332,7 +447,7 @@
       <div class="stat-card"><div class="stat-num" id="res-new">0</div><div class="stat-label">신규 논문</div></div>
     </div>
     <div id="crawlPreviewList"></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:0.9rem">
       <button class="btn btn-accent btn-sm" onclick="document.querySelector('.tab-btn:nth-child(2)').click()">
         <i class="fas fa-list"></i> 전체 논문 보기
       </button>
@@ -342,47 +457,41 @@
     </div>
   </div>
 
-  <!-- 워크플로우 가이드 -->
   <div class="card">
     <div class="card-title"><i class="fas fa-route"></i> 연구 워크플로우</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
-      <div style="text-align:center;padding:1rem">
-        <div style="width:48px;height:48px;border-radius:50%;background:#065f46;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.2rem">①</div>
-        <div style="font-weight:600;margin-bottom:4px;font-size:0.9rem">PubMed 크롤링</div>
-        <div style="font-size:0.75rem;color:var(--text-muted)">파이토케미컬 입력 후 논문 수집</div>
+    <div class="workflow-steps">
+      <div class="workflow-step">
+        <div class="step-num" style="background:#065f46">①</div>
+        <div class="step-title">PubMed 크롤링</div>
+        <div class="step-desc">파이토케미컬 입력 후 논문 수집</div>
       </div>
-      <div style="text-align:center;padding:1rem">
-        <div style="width:48px;height:48px;border-radius:50%;background:#1e3a5f;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.2rem">②</div>
-        <div style="font-weight:600;margin-bottom:4px;font-size:0.9rem">RAG 인덱싱</div>
-        <div style="font-size:0.75rem;color:var(--text-muted)">논문을 벡터DB에 임베딩</div>
+      <div class="workflow-step">
+        <div class="step-num" style="background:#1e3a5f">②</div>
+        <div class="step-title">RAG 인덱싱</div>
+        <div class="step-desc">논문을 벡터DB에 임베딩</div>
       </div>
-      <div style="text-align:center;padding:1rem">
-        <div style="width:48px;height:48px;border-radius:50%;background:#3b1f5e;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.2rem">③</div>
-        <div style="font-weight:600;margin-bottom:4px;font-size:0.9rem">그래프 구축</div>
-        <div style="font-size:0.75rem;color:var(--text-muted)">LLM으로 지식 그래프 자동 생성</div>
+      <div class="workflow-step">
+        <div class="step-num" style="background:#3b1f5e">③</div>
+        <div class="step-title">그래프 구축</div>
+        <div class="step-desc">LLM으로 지식 그래프 자동 생성</div>
       </div>
-      <div style="text-align:center;padding:1rem">
-        <div style="width:48px;height:48px;border-radius:50%;background:#1a3a2a;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.2rem">④</div>
-        <div style="font-weight:600;margin-bottom:4px;font-size:0.9rem">AI 챗봇</div>
-        <div style="font-size:0.75rem;color:var(--text-muted)">RAG 기반 논문 Q&A</div>
+      <div class="workflow-step">
+        <div class="step-num" style="background:#1a3a2a">④</div>
+        <div class="step-title">탐색 & 질문</div>
+        <div class="step-desc">그래프 필터 + AI 챗봇 Q&A</div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════
-     탭 2: 논문 데이터베이스
+     탭 2: 논문 DB (개선)
 ═══════════════════════════════════════════════════ -->
 <div id="tab-papers" class="tab-panel">
-
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:1rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:0.9rem">
       <div class="card-title" style="margin:0"><i class="fas fa-database"></i> 수집된 논문 목록</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <label class="checkbox-row">
-          <input type="checkbox" id="metaFilterCheck" onchange="loadPapers(1)">
-          <span style="font-size:0.8rem">메타분석만</span>
-        </label>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" onclick="startIndexing()">
           <i class="fas fa-layer-group"></i> RAG 인덱싱
         </button>
@@ -392,16 +501,37 @@
       </div>
     </div>
 
+    <!-- 검색 -->
     <div class="search-bar">
-      <input class="input" id="paperSearchInput" placeholder="제목, 초록 검색..." oninput="debounceSearch()">
-      <button class="btn btn-secondary btn-sm" onclick="loadPapers(1)">
-        <i class="fas fa-search"></i>
+      <input class="input" id="paperSearchInput" placeholder="제목, 초록 검색..." oninput="debounceSearch()" style="flex:1">
+    </div>
+
+    <!-- 필터 바 -->
+    <div class="filter-row">
+      <select class="filter-select" id="yearFilter" onchange="loadPapers(1)">
+        <option value="">연도 전체</option>
+      </select>
+      <select class="filter-select" id="journalFilter" onchange="loadPapers(1)">
+        <option value="">저널 전체</option>
+      </select>
+      <select class="filter-select" id="pubTypeFilter" onchange="loadPapers(1)">
+        <option value="">타입 전체</option>
+        <option value="meta">🔬 메타분석</option>
+        <option value="sr">📊 체계적 리뷰</option>
+      </select>
+      <select class="filter-select" id="sortFilter" onchange="loadPapers(1)">
+        <option value="year">연도순</option>
+        <option value="title">제목순</option>
+        <option value="journal">저널순</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="clearPaperFilters()">
+        <i class="fas fa-times"></i> 필터 초기화
       </button>
     </div>
 
-    <!-- 인덱싱/그래프 구축 진행 -->
-    <div id="paperActionProgress" style="display:none;margin-bottom:1rem">
-      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:6px">
+    <!-- 인덱싱/구축 진행 -->
+    <div id="paperActionProgress" style="display:none;margin-bottom:0.9rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:5px">
         <span id="paperActionText">처리 중...</span>
       </div>
       <div class="progress-wrap">
@@ -420,66 +550,180 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════
-     탭 3: 지식 그래프
+     탭 3: 지식 그래프 (전면 개선)
 ═══════════════════════════════════════════════════ -->
 <div id="tab-graph" class="tab-panel">
 
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:1rem">
-      <div class="card-title" style="margin:0"><i class="fas fa-project-diagram"></i> 파이토케미컬 지식 그래프</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input class="input" id="graphSearchInput" placeholder="노드 검색..." style="width:160px" oninput="filterGraph()">
-        <select class="select" id="nodeTypeFilter" onchange="filterGraph()" style="width:140px">
-          <option value="">모든 노드</option>
-          <option value="Phytochemical">파이토케미컬</option>
-          <option value="HealthCondition">건강 조건</option>
-          <option value="Mechanism">메커니즘</option>
-          <option value="FoodSource">식품 소스</option>
-          <option value="Biomarker">바이오마커</option>
+  <!-- 그래프 구축 진행 바 -->
+  <div id="graphBuildProgress" style="display:none">
+    <div class="card" style="margin-bottom:0.9rem;padding:1rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:6px">
+        <span id="graphBuildText">그래프 구축 중...</span>
+        <button class="btn btn-ghost btn-xs" onclick="document.getElementById('graphBuildProgress').style.display='none'">✕</button>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:5%" id="graphBuildBar"></div></div>
+    </div>
+  </div>
+
+  <div class="graph-workspace">
+
+    <!-- ── 좌측 필터 패널 ── -->
+    <aside class="graph-sidebar">
+
+      <!-- 빠른 뷰 전환 -->
+      <div class="sidebar-section">
+        <div class="sidebar-title"><i class="fas fa-layer-group"></i> 빠른 뷰</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button class="btn btn-secondary btn-sm" id="viewAll" onclick="applyQuickView('all')" style="justify-content:flex-start">
+            <i class="fas fa-globe" style="color:#34d399"></i> 전체 그래프
+          </button>
+          <button class="btn btn-secondary btn-sm" id="viewPhytoHealth" onclick="applyQuickView('phyto-health')" style="justify-content:flex-start">
+            <i class="fas fa-heartbeat" style="color:#F44336"></i> 파이토↔건강 조건
+          </button>
+          <button class="btn btn-secondary btn-sm" id="viewFoodSource" onclick="applyQuickView('food-source')" style="justify-content:flex-start">
+            <i class="fas fa-apple-alt" style="color:#FF9800"></i> 파이토↔식품 소스
+          </button>
+          <button class="btn btn-secondary btn-sm" id="viewMechanism" onclick="applyQuickView('mechanism')" style="justify-content:flex-start">
+            <i class="fas fa-cogs" style="color:#2196F3"></i> 파이토↔메커니즘
+          </button>
+        </div>
+      </div>
+
+      <!-- 파이토케미컬 포커스 -->
+      <div class="sidebar-section">
+        <div class="sidebar-title"><i class="fas fa-crosshairs"></i> 파이토케미컬 포커스</div>
+        <select class="select" id="phytoFocusSelect" onchange="applyPhytoFocus()" style="font-size:0.8rem;padding:7px 10px;margin-bottom:6px">
+          <option value="">— 전체 보기 —</option>
         </select>
-        <button class="btn btn-secondary btn-sm" onclick="resetGraphZoom()"><i class="fas fa-expand"></i></button>
-        <button class="btn btn-secondary btn-sm" onclick="startBuildGraph()"><i class="fas fa-sync"></i> 재구축</button>
+        <div style="font-size:0.72rem;color:var(--text-muted)">선택한 파이토케미컬과 직접 연결된 노드만 표시</div>
       </div>
-    </div>
 
-    <!-- 그래프 구축 진행 -->
-    <div id="graphBuildProgress" style="display:none;margin-bottom:1rem">
-      <div style="font-size:0.8rem;margin-bottom:6px" id="graphBuildText">그래프 구축 중...</div>
-      <div class="progress-wrap">
-        <div class="progress-bar" style="width:0%" id="graphBuildBar"></div>
+      <!-- 노드 타입 필터 -->
+      <div class="sidebar-section">
+        <div class="sidebar-title"><i class="fas fa-circle"></i> 노드 타입</div>
+        <div class="node-type-chips" id="nodeTypeChips">
+          <!-- JS로 동적 생성 -->
+        </div>
       </div>
-    </div>
 
-    <div id="graph-container">
-      <svg id="graph-svg"></svg>
-      <div class="graph-tooltip" id="graphTooltip"></div>
-      <div id="graphEmpty" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--text-muted)">
-        <i class="fas fa-project-diagram" style="font-size:3rem;opacity:0.3;display:block;margin-bottom:1rem"></i>
-        <p style="font-size:0.9rem">논문을 크롤링하고 그래프 구축 버튼을 눌러주세요</p>
+      <!-- 관계 타입 필터 -->
+      <div class="sidebar-section">
+        <div class="sidebar-title"><i class="fas fa-arrows-alt-h"></i> 관계 타입</div>
+        <div class="rel-chips" id="relTypeChips">
+          <!-- JS로 동적 생성 -->
+        </div>
+        <button class="btn btn-ghost btn-xs" style="width:100%;margin-top:6px" onclick="resetRelFilters()">
+          <i class="fas fa-undo"></i> 관계 필터 초기화
+        </button>
       </div>
-    </div>
 
-    <div class="graph-legend" id="graphLegend">
-      <div class="legend-item"><div class="legend-dot" style="background:#4CAF50"></div> 파이토케미컬</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#F44336"></div> 건강 조건</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#2196F3"></div> 메커니즘</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#FF9800"></div> 식품 소스</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#9C27B0"></div> 바이오마커</div>
-    </div>
+      <!-- 디스플레이 옵션 -->
+      <div class="sidebar-section">
+        <div class="sidebar-title"><i class="fas fa-sliders-h"></i> 표시 옵션</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <label class="checkbox-row" style="font-size:0.8rem">
+            <input type="checkbox" id="showEdgeLabels" onchange="toggleEdgeLabels(this.checked)">
+            <span>엣지 레이블 표시</span>
+          </label>
+          <label class="checkbox-row" style="font-size:0.8rem">
+            <input type="checkbox" id="showMinimap" checked onchange="toggleMinimap(this.checked)">
+            <span>미니맵 표시</span>
+          </label>
+          <label class="checkbox-row" style="font-size:0.8rem">
+            <input type="checkbox" id="highlightNeighbors" checked>
+            <span>호버시 이웃 강조</span>
+          </label>
+        </div>
+      </div>
 
-    <!-- 그래프 통계 -->
-    <div class="stat-grid" style="margin-top:1rem" id="graphStatGrid">
-      <div class="stat-card"><div class="stat-num" id="g-nodes">0</div><div class="stat-label">노드</div></div>
-      <div class="stat-card"><div class="stat-num" id="g-edges">0</div><div class="stat-label">관계</div></div>
-      <div class="stat-card"><div class="stat-num" id="g-phyto">0</div><div class="stat-label">파이토케미컬</div></div>
-      <div class="stat-card"><div class="stat-num" id="g-health">0</div><div class="stat-label">건강 조건</div></div>
+      <!-- 재구축 버튼 -->
+      <button class="btn btn-primary btn-sm" style="width:100%" onclick="startBuildGraph()">
+        <i class="fas fa-sync"></i> 그래프 재구축
+      </button>
+    </aside>
+
+    <!-- ── 우측 그래프 메인 ── -->
+    <div class="graph-main">
+
+      <!-- 툴바 -->
+      <div class="graph-toolbar">
+        <input class="input" id="graphSearchInput" placeholder="노드 검색..." oninput="filterGraphBySearch()" style="width:175px;font-size:0.82rem">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="resetGraphView()" title="초기화">
+          <i class="fas fa-expand-arrows-alt"></i>
+        </button>
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="centerGraph()" title="중앙 정렬">
+          <i class="fas fa-compress-arrows-alt"></i>
+        </button>
+        <div id="activeFilterTags" class="active-filter-tags" style="flex:1"></div>
+      </div>
+
+      <!-- 그래프 캔버스 -->
+      <div id="graph-container">
+        <svg id="graph-svg"></svg>
+        <div class="graph-tooltip" id="graphTooltip"></div>
+        <div id="graphEmpty">
+          <i class="fas fa-project-diagram"></i>
+          <p>논문을 크롤링하고<br>그래프 구축 버튼을 눌러주세요</p>
+        </div>
+
+        <!-- 확대/축소 컨트롤 -->
+        <div class="graph-controls">
+          <div class="graph-ctrl-btn" onclick="zoomIn()" title="확대">＋</div>
+          <div class="graph-ctrl-btn" onclick="zoomOut()" title="축소">－</div>
+          <div class="graph-ctrl-btn" id="btnFocusMode" onclick="toggleFocusMode()" title="포커스 모드">
+            <i class="fas fa-dot-circle"></i>
+          </div>
+        </div>
+
+        <!-- 미니맵 -->
+        <div id="minimap">
+          <svg id="minimap-svg"></svg>
+        </div>
+      </div>
+
+      <!-- 범례 -->
+      <div class="graph-legend" id="graphLegend">
+        <div class="legend-item"><div class="legend-dot" style="background:#4CAF50"></div> 파이토케미컬</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F44336"></div> 건강 조건</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2196F3"></div> 메커니즘</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FF9800"></div> 식품 소스</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#9C27B0"></div> 바이오마커</div>
+      </div>
+
+      <!-- 그래프 통계 -->
+      <div class="graph-stat-row" id="graphStatGrid">
+        <div class="g-stat"><div class="g-stat-num" id="g-nodes">0</div><div class="g-stat-label">표시 노드</div></div>
+        <div class="g-stat"><div class="g-stat-num" id="g-edges">0</div><div class="g-stat-label">관계</div></div>
+        <div class="g-stat"><div class="g-stat-num" id="g-phyto">0</div><div class="g-stat-label">파이토케미컬</div></div>
+        <div class="g-stat"><div class="g-stat-num" id="g-health">0</div><div class="g-stat-label">건강 조건</div></div>
+      </div>
     </div>
   </div>
 
   <!-- 노드 상세 패널 -->
-  <div class="card" id="nodeDetailPanel" style="display:none">
-    <div class="card-title"><i class="fas fa-info-circle"></i> <span id="nodeDetailTitle">노드 상세 정보</span></div>
-    <div id="nodeDetailContent"></div>
+  <div class="card" id="nodeDetailPanel" style="display:none;margin-top:1.25rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div class="card-title" style="margin:0">
+        <i class="fas fa-info-circle"></i>
+        <span id="nodeDetailTitle">노드 상세 정보</span>
+        <span id="nodeDetailTypeBadge" style="margin-left:6px"></span>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-primary btn-sm" id="btnFocusNode" onclick="focusOnCurrentNode()">
+          <i class="fas fa-crosshairs"></i> 이 노드 중심으로
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('nodeDetailPanel').style.display='none'">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 통계 -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1rem" id="nodeDetailStats">
+    </div>
+
+    <div class="node-detail-grid" id="nodeDetailContent">
+    </div>
   </div>
 </div>
 
@@ -487,20 +731,16 @@
      탭 4: AI 연구 어시스턴트 (RAG 챗봇)
 ═══════════════════════════════════════════════════ -->
 <div id="tab-chatbot" class="tab-panel">
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:1.25rem">
 
-  <div style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem">
-    <!-- 채팅 영역 -->
     <div class="card" style="margin:0">
       <div class="card-title"><i class="fas fa-robot"></i> AI 파이토케미컬 연구 어시스턴트</div>
-
       <div id="chat-messages">
         <div class="msg-bubble msg-bot">
-          👋 안녕하세요! 저는 PubMed 논문을 기반으로 파이토케미컬과 건강 상관성에 대해 답변하는 AI 연구 어시스턴트입니다.
-          <br><br>
-          🔬 먼저 논문을 크롤링하고 인덱싱한 후 질문해주세요.
-          <br><br>
-          💡 <strong>예시 질문:</strong>
-          <ul style="margin-top:8px;padding-left:16px;font-size:0.82rem;color:#94a3b8">
+          👋 안녕하세요! PubMed 논문 기반으로 파이토케미컬과 건강 상관성에 답변하는 AI 어시스턴트입니다.
+          <br><br>🔬 논문 크롤링 → 인덱싱 후 질문해주세요.
+          <br><br>💡 <strong>예시 질문:</strong>
+          <ul style="margin-top:7px;padding-left:16px;font-size:0.8rem;color:#94a3b8">
             <li>커큐민이 염증에 미치는 효과는?</li>
             <li>레스베라트롤과 심혈관 건강의 관계</li>
             <li>케르세틴의 항암 메커니즘을 설명해줘</li>
@@ -508,7 +748,6 @@
           </ul>
         </div>
       </div>
-
       <div class="chat-input-area">
         <textarea class="chat-input" id="chatInput" placeholder="파이토케미컬과 건강에 관해 질문하세요..." rows="2"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
@@ -516,25 +755,22 @@
           <i class="fas fa-paper-plane"></i>
         </button>
       </div>
-      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">
-        Enter로 전송 | Shift+Enter 줄바꿈
-      </div>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:5px">Enter로 전송 | Shift+Enter 줄바꿈</div>
     </div>
 
-    <!-- 사이드 패널 -->
     <div>
       <div class="card" style="margin:0 0 1rem 0">
         <div class="card-title" style="margin-bottom:0.75rem"><i class="fas fa-layer-group"></i> 시스템 상태</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;justify-content:space-between;font-size:0.85rem">
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="display:flex;justify-content:space-between;font-size:0.84rem">
             <span style="color:var(--text-muted)">인덱싱 문서</span>
             <span id="ragIndexedCount" style="color:#34d399;font-weight:700">0</span>
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:0.85rem">
+          <div style="display:flex;justify-content:space-between;font-size:0.84rem">
             <span style="color:var(--text-muted)">그래프 노드</span>
             <span id="ragGraphNodes" style="color:#34d399;font-weight:700">0</span>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="startIndexing()" style="width:100%">
+          <button class="btn btn-secondary btn-sm" onclick="startIndexing()" style="width:100%;margin-top:3px">
             <i class="fas fa-sync"></i> 문서 재인덱싱
           </button>
         </div>
@@ -542,22 +778,13 @@
 
       <div class="card" style="margin:0">
         <div class="card-title" style="margin-bottom:0.75rem"><i class="fas fa-lightbulb"></i> 추천 질문</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.78rem">
-            커큐민의 NF-κB 억제 메커니즘
-          </button>
-          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.78rem">
-            메타분석에서 케르세틴과 당뇨병 관계
-          </button>
-          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.78rem">
-            설포라판의 Nrf2 경로 활성화
-          </button>
-          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.78rem">
-            레스베라트롤과 SIRT1 활성화
-          </button>
-          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.78rem">
-            안토시아닌의 산화스트레스 감소 효과
-          </button>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.76rem">커큐민의 NF-κB 억제 메커니즘</button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.76rem">메타분석에서 케르세틴과 당뇨병 관계</button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.76rem">설포라판의 Nrf2 경로 활성화</button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.76rem">레스베라트롤과 SIRT1 활성화</button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.76rem">안토시아닌의 산화스트레스 감소 효과</button>
+          <button class="btn btn-ghost btn-sm" onclick="setQuestion(this.textContent)" style="text-align:left;white-space:normal;height:auto;padding:8px 10px;font-size:0.76rem">베르베린이 장내 마이크로바이옴에 미치는 영향</button>
         </div>
       </div>
     </div>
@@ -566,113 +793,121 @@
 
 </main>
 
-<!-- 토스트 -->
 <div id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
 //   전역 상태
-// ═══════════════════════════════════════
-const API = '';  // 같은 서버
+// ════════════════════════════════════════
+const API = '';
 let chatHistory = [];
-let graphData = { nodes: [], edges: [] };
+let graphData = { nodes: [], edges: [] };       // 원본 전체 데이터
+let filteredGraph = { nodes: [], edges: [] };   // 현재 표시 데이터
 let graphSimulation = null;
+let graphZoom = null;
+let graphSvgG = null;
 let papersCurrentPage = 1;
 let searchDebounce = null;
 let activeCrawlTask = null;
-let activeGraphTask = null;
-let activeIndexTask = null;
 let buildGraphTaskId = null;
+let focusModeEnabled = false;
+let currentFocusNodeId = null;
+let showEdgeLabelsFlag = false;
+let activeNodeTypeFilters = new Set(['Phytochemical','HealthCondition','Mechanism','FoodSource','Biomarker']);
+let activeRelTypeFilters = new Set();   // 비어있으면 전체 허용
+let currentQuickView = 'all';
 
-// ═══════════════════════════════════════
-//   API Key 관리
-// ═══════════════════════════════════════
-function getApiKey() {
-  return document.getElementById('apiKeyInput').value.trim();
-}
+// 노드 타입 색상
+const NODE_COLORS = {
+  'Phytochemical':   '#4CAF50',
+  'HealthCondition': '#F44336',
+  'Mechanism':       '#2196F3',
+  'FoodSource':      '#FF9800',
+  'Biomarker':       '#9C27B0',
+  'Study':           '#607D8B',
+};
+// 관계 타입 색상
+const EDGE_COLORS = {
+  IMPROVES:'#4CAF50', REDUCES:'#F44336', INHIBITS:'#FF5722',
+  ACTIVATES:'#03A9F4', FOUND_IN:'#FF9800', PREVENTS:'#8BC34A',
+  INCREASES:'#FFEB3B', ASSOCIATED_WITH:'#607D8B', AFFECTS:'#9E9E9E',
+  BIOMARKER_OF:'#9C27B0',
+};
 
-function handleApiKeyInput() {
-  const key = getApiKey();
-  const badge = document.getElementById('apiKeyBadge');
-  if (key.startsWith('sk-') && key.length > 20) {
-    badge.textContent = '✓ 설정됨';
-    badge.className = 'badge-key ok';
-    localStorage.setItem('oai_key', key);
-  } else {
-    badge.textContent = '미설정';
-    badge.className = 'badge-key no';
-  }
-}
-
-// 저장된 키 복원
+// ════════════════════════════════════════
+//   초기화
+// ════════════════════════════════════════
 window.addEventListener('load', () => {
   const saved = localStorage.getItem('oai_key');
-  if (saved) {
-    document.getElementById('apiKeyInput').value = saved;
-    handleApiKeyInput();
-  }
+  if (saved) { document.getElementById('apiKeyInput').value = saved; handleApiKeyInput(); }
   loadStats();
   loadPapers(1);
   loadGraph();
+  loadPaperFilters();
 });
 
+// ════════════════════════════════════════
+//   API Key
+// ════════════════════════════════════════
+function getApiKey() { return document.getElementById('apiKeyInput').value.trim(); }
+function handleApiKeyInput() {
+  const key = getApiKey(), badge = document.getElementById('apiKeyBadge');
+  if (key.startsWith('sk-') && key.length > 20) {
+    badge.textContent = '✓ 설정됨'; badge.className = 'badge-key ok';
+    localStorage.setItem('oai_key', key);
+  } else { badge.textContent = '미설정'; badge.className = 'badge-key no'; }
+}
 function requireApiKey() {
-  if (!getApiKey().startsWith('sk-')) {
-    showToast('상단에 OpenAI API Key를 먼저 입력하세요', 'error');
-    return false;
-  }
+  if (!getApiKey().startsWith('sk-')) { showToast('상단에 OpenAI API Key를 입력하세요', 'error'); return false; }
   return true;
 }
 
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
 //   탭 전환
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
 function switchTab(btn, name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
-  if (name === 'graph') { loadGraph(); }
-  if (name === 'papers') { loadPapers(papersCurrentPage); }
+  if (name === 'graph')   { loadGraph(); }
+  if (name === 'papers')  { loadPapers(papersCurrentPage); }
   if (name === 'chatbot') { loadRagStats(); }
 }
 
-// ═══════════════════════════════════════
-//   통계 로드
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
+//   통계
+// ════════════════════════════════════════
 async function loadStats() {
   try {
-    const [paperStats, graphStats, ragStats] = await Promise.all([
-      axios.get(API + '/api/papers/stats').catch(() => ({data:{}})),
-      axios.get(API + '/api/graph/stats').catch(() => ({data:{}})),
-      axios.get(API + '/api/rag/stats').catch(() => ({data:{}}))
+    const [ps, gs, rs] = await Promise.all([
+      axios.get(API+'/api/papers/stats').catch(()=>({data:{}})),
+      axios.get(API+'/api/graph/stats').catch(()=>({data:{}})),
+      axios.get(API+'/api/rag/stats').catch(()=>({data:{}}))
     ]);
-    const ps = paperStats.data, gs = graphStats.data, rs = ragStats.data;
-    document.getElementById('stat-total').textContent = ps.total_papers || 0;
-    document.getElementById('stat-meta').textContent = ps.meta_analysis_count || 0;
-    document.getElementById('stat-graph-nodes').textContent = gs.total_nodes || 0;
-    document.getElementById('stat-graph-edges').textContent = gs.total_edges || 0;
-    document.getElementById('stat-indexed').textContent = rs.indexed_documents || 0;
+    document.getElementById('stat-total').textContent        = ps.data.total_papers || 0;
+    document.getElementById('stat-meta').textContent         = ps.data.meta_analysis_count || 0;
+    document.getElementById('stat-graph-nodes').textContent  = gs.data.total_nodes || 0;
+    document.getElementById('stat-graph-edges').textContent  = gs.data.total_edges || 0;
+    document.getElementById('stat-indexed').textContent      = rs.data.indexed_documents || 0;
   } catch(e) {}
 }
+setInterval(loadStats, 30000);
 
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
 //   크롤링
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
 async function startCrawl() {
   const phyto = document.getElementById('phytoInput').value.trim();
   if (!phyto) { showToast('파이토케미컬 이름을 입력하세요', 'error'); return; }
-
   const btn = document.getElementById('crawlBtn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> 크롤링 중...';
-
   document.getElementById('crawlProgress').style.display = 'block';
   document.getElementById('crawlResultCard').style.display = 'none';
   updateCrawlProgress('PubMed 검색 시작...', 10);
-
   try {
-    const res = await axios.post(API + '/api/crawl', {
+    const res = await axios.post(API+'/api/crawl', {
       phytochemical: phyto,
       health_condition: document.getElementById('healthSelect').value || null,
       max_results: parseInt(document.getElementById('maxResultsSelect').value),
@@ -682,258 +917,446 @@ async function startCrawl() {
     activeCrawlTask = res.data.task_id;
     pollCrawlStatus(activeCrawlTask);
   } catch(e) {
-    showToast('크롤링 시작 실패: ' + (e.response?.data?.detail || e.message), 'error');
+    showToast('크롤링 시작 실패: '+(e.response?.data?.detail||e.message), 'error');
     resetCrawlBtn();
   }
 }
-
 function updateCrawlProgress(msg, pct) {
   document.getElementById('crawlStatusText').textContent = msg;
-  document.getElementById('crawlPercent').textContent = pct + '%';
-  document.getElementById('crawlProgressBar').style.width = pct + '%';
+  document.getElementById('crawlPercent').textContent = pct+'%';
+  document.getElementById('crawlProgressBar').style.width = pct+'%';
 }
-
 async function pollCrawlStatus(taskId) {
   try {
-    const res = await axios.get(API + '/api/crawl/status/' + taskId);
+    const res = await axios.get(API+'/api/crawl/status/'+taskId);
     const data = res.data;
-
     if (data.status === 'running' || data.status === 'started') {
       const steps = {searching:20, fetching:60, complete:100};
-      const pct = steps[data.step] || 30;
-      updateCrawlProgress(data.message || '처리 중...', pct);
-      setTimeout(() => pollCrawlStatus(taskId), 1500);
+      updateCrawlProgress(data.message||'처리 중...', steps[data.step]||30);
+      setTimeout(()=>pollCrawlStatus(taskId), 1500);
     } else if (data.status === 'complete') {
       updateCrawlProgress('✅ 크롤링 완료!', 100);
       showCrawlResult(data.result);
       resetCrawlBtn();
       loadStats();
+      loadPaperFilters();
       const warn = data.result.warning;
-      if (warn) {
-        showToast('⚠️ ' + warn, 'error');
-      } else {
-        showToast(`크롤링 완료: ${data.result.total}편 수집`, 'success');
-      }
+      showToast(warn ? '⚠️ '+warn : `크롤링 완료: ${data.result.total}편 수집`, warn?'error':'success');
     } else if (data.status === 'error') {
-      showToast('오류: ' + data.message, 'error');
+      showToast('오류: '+data.message, 'error');
       resetCrawlBtn();
     }
-  } catch(e) {
-    setTimeout(() => pollCrawlStatus(taskId), 2000);
-  }
+  } catch(e) { setTimeout(()=>pollCrawlStatus(taskId), 2000); }
 }
-
 function showCrawlResult(result) {
   document.getElementById('crawlResultCard').style.display = 'block';
   document.getElementById('res-total').textContent = result.total;
   document.getElementById('res-meta').textContent = result.meta_count;
   document.getElementById('res-new').textContent = result.new_count;
-
   const list = document.getElementById('crawlPreviewList');
   const papers = result.papers || [];
-  list.innerHTML = papers.slice(0, 5).map(p => `
+  list.innerHTML = papers.slice(0,5).map(p => `
     <div class="paper-card">
-      <div class="paper-title">${p.title || '제목 없음'}</div>
+      <div class="paper-title">${p.title||'제목 없음'}</div>
       <div class="paper-meta">
-        ${p.is_meta_analysis ? '<span class="badge badge-meta">🔬 메타분석</span>' : ''}
-        ${p.is_systematic_review ? '<span class="badge badge-sr">📊 체계적리뷰</span>' : ''}
-        <span class="badge badge-year">${p.year || ''}</span>
-        <span>${p.journal || ''}</span>
-        ${p.url ? `<a href="${p.url}" target="_blank" style="color:#34d399;font-size:0.75rem">PMID:${p.pmid}</a>` : ''}
+        ${p.is_meta_analysis?'<span class="badge badge-meta">🔬 메타분석</span>':''}
+        ${p.is_systematic_review?'<span class="badge badge-sr">📊 체계적리뷰</span>':''}
+        <span class="badge badge-year">${p.year||''}</span>
+        <span>${p.journal||''}</span>
+        ${p.url?`<a href="${p.url}" target="_blank" style="color:#34d399;font-size:0.73rem">PMID:${p.pmid}</a>`:''}
       </div>
-    </div>
-  `).join('') + (papers.length > 5 ? `<div style="text-align:center;color:var(--text-muted);font-size:0.8rem;padding:8px">외 ${papers.length-5}편...</div>` : '');
+    </div>`).join('') +
+    (papers.length>5?`<div style="text-align:center;color:var(--text-muted);font-size:0.78rem;padding:8px">외 ${papers.length-5}편...</div>`:'');
 }
-
 function resetCrawlBtn() {
   const btn = document.getElementById('crawlBtn');
   btn.disabled = false;
   btn.innerHTML = '<i class="fas fa-satellite-dish"></i> 크롤링 시작';
 }
 
-// ═══════════════════════════════════════
-//   논문 목록
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
+//   논문 DB — 필터 초기화
+// ════════════════════════════════════════
+async function loadPaperFilters() {
+  try {
+    const [yRes, jRes] = await Promise.all([
+      axios.get(API+'/api/papers/years').catch(()=>({data:{years:[]}})),
+      axios.get(API+'/api/papers/journals').catch(()=>({data:{journals:[]}}))
+    ]);
+    const yearSel = document.getElementById('yearFilter');
+    const curYear = yearSel.value;
+    yearSel.innerHTML = '<option value="">연도 전체</option>' +
+      yRes.data.years.map(y=>`<option value="${y}" ${y===curYear?'selected':''}>${y}</option>`).join('');
+    const journalSel = document.getElementById('journalFilter');
+    const curJournal = journalSel.value;
+    journalSel.innerHTML = '<option value="">저널 전체</option>' +
+      jRes.data.journals.map(j=>`<option value="${j}" ${j===curJournal?'selected':''}>${escapeHtml(j)}</option>`).join('');
+  } catch(e) {}
+}
+
 async function loadPapers(page = 1) {
   papersCurrentPage = page;
-  const search = document.getElementById('paperSearchInput')?.value || '';
-  const metaOnly = document.getElementById('metaFilterCheck')?.checked || false;
-  
+  const search  = document.getElementById('paperSearchInput')?.value || '';
+  const year    = document.getElementById('yearFilter')?.value || '';
+  const journal = document.getElementById('journalFilter')?.value || '';
+  const pubType = document.getElementById('pubTypeFilter')?.value || '';
+  const sortBy  = document.getElementById('sortFilter')?.value || 'year';
   try {
-    const res = await axios.get(API + '/api/papers', {
-      params: { page, limit: 15, meta_only: metaOnly, search: search || undefined }
+    const res = await axios.get(API+'/api/papers', {
+      params: { page, limit: 15, search: search||undefined, year: year||undefined,
+                journal: journal||undefined, pub_type: pubType||undefined, sort_by: sortBy }
     });
     const { papers, total, total_pages } = res.data;
-    
     const list = document.getElementById('papersList');
     if (!papers.length) {
-      list.innerHTML = `<div class="empty-state"><i class="fas fa-satellite-dish"></i><p>논문이 없습니다. 크롤링을 시작하세요</p></div>`;
+      list.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p>조건에 맞는 논문이 없습니다</p></div>`;
     } else {
       list.innerHTML = `
         <div class="section-header">
           <span class="section-title">논문 목록</span>
           <span class="count-badge">총 ${total}편</span>
-        </div>
-        ${papers.map(p => `
-          <div class="paper-card">
-            <div class="paper-title"><a href="${p.url}" target="_blank" style="color:var(--text);text-decoration:none;hover:color:#34d399">${p.title || '제목 없음'}</a></div>
+        </div>` +
+        papers.map((p,i) => `
+          <div class="paper-card" id="pc-${i}">
+            <div class="paper-title">
+              <a href="${p.url}" target="_blank" style="color:var(--text);text-decoration:none">${escapeHtml(p.title||'제목 없음')}</a>
+            </div>
             <div class="paper-meta">
-              ${p.is_meta_analysis ? '<span class="badge badge-meta">🔬 메타분석</span>' : ''}
-              ${p.is_systematic_review ? '<span class="badge badge-sr">📊 체계적리뷰</span>' : ''}
-              <span class="badge badge-year">${p.year || ''}</span>
-              <span>${(p.journal || '').substring(0, 40)}</span>
+              ${p.is_meta_analysis?'<span class="badge badge-meta">🔬 메타분석</span>':''}
+              ${p.is_systematic_review?'<span class="badge badge-sr">📊 체계적리뷰</span>':''}
+              ${(p.pub_types||[]).some(pt=>pt.includes('randomized'))?'<span class="badge badge-rct">🧪 RCT</span>':''}
+              <span class="badge badge-year">${p.year||''}</span>
+              ${p.journal?`<span class="badge badge-journal">${escapeHtml(p.journal.substring(0,35))}</span>`:''}
               <a href="${p.url}" target="_blank" class="source-link">PMID:${p.pmid}</a>
             </div>
-            <div class="paper-abstract">${p.abstract || '초록 없음'}</div>
-          </div>
-        `).join('')}`;
+            <div class="paper-abstract">${escapeHtml((p.abstract||'초록 없음').substring(0,300))}${(p.abstract||'').length>300?'...':''}</div>
+            ${p.abstract&&p.abstract.length>300?`<span class="expand-btn" onclick="toggleAbstract(this,'pc-${i}','${escapeQuotes(p.abstract)}')">▼ 전체 보기</span>`:''}
+          </div>`).join('');
     }
-    
     // 페이지네이션
     const pg = document.getElementById('papersPagination');
     if (total_pages > 1) {
       let btns = '';
-      const start = Math.max(1, page - 2), end = Math.min(total_pages, page + 2);
-      if (start > 1) btns += `<button class="page-btn" onclick="loadPapers(1)">1</button>`;
-      if (start > 2) btns += `<button class="page-btn" disabled>...</button>`;
-      for (let i = start; i <= end; i++) {
-        btns += `<button class="page-btn ${i===page?'active':''}" onclick="loadPapers(${i})">${i}</button>`;
-      }
-      if (end < total_pages - 1) btns += `<button class="page-btn" disabled>...</button>`;
-      if (end < total_pages) btns += `<button class="page-btn" onclick="loadPapers(${total_pages})">${total_pages}</button>`;
+      const s = Math.max(1, page-2), e = Math.min(total_pages, page+2);
+      if (s>1) btns += `<button class="page-btn" onclick="loadPapers(1)">1</button>`;
+      if (s>2) btns += `<button class="page-btn" disabled>…</button>`;
+      for (let i=s; i<=e; i++) btns += `<button class="page-btn ${i===page?'active':''}" onclick="loadPapers(${i})">${i}</button>`;
+      if (e<total_pages-1) btns += `<button class="page-btn" disabled>…</button>`;
+      if (e<total_pages) btns += `<button class="page-btn" onclick="loadPapers(${total_pages})">${total_pages}</button>`;
       pg.innerHTML = btns;
-    } else {
-      pg.innerHTML = '';
-    }
-  } catch(e) {
-    console.error('논문 로드 오류:', e);
-  }
+    } else { pg.innerHTML = ''; }
+  } catch(e) { console.error('논문 로드 오류:', e); }
 }
 
 function debounceSearch() {
   clearTimeout(searchDebounce);
-  searchDebounce = setTimeout(() => loadPapers(1), 400);
+  searchDebounce = setTimeout(()=>loadPapers(1), 400);
+}
+function clearPaperFilters() {
+  document.getElementById('paperSearchInput').value = '';
+  document.getElementById('yearFilter').value = '';
+  document.getElementById('journalFilter').value = '';
+  document.getElementById('pubTypeFilter').value = '';
+  document.getElementById('sortFilter').value = 'year';
+  loadPapers(1);
+}
+function toggleAbstract(btn, cardId, fullAbstract) {
+  const card = document.getElementById(cardId);
+  if (card.classList.toggle('expanded')) {
+    const div = document.createElement('div');
+    div.className = 'abstract-full';
+    div.textContent = fullAbstract;
+    card.appendChild(div);
+    btn.textContent = '▲ 접기';
+  } else {
+    card.querySelector('.abstract-full')?.remove();
+    btn.textContent = '▼ 전체 보기';
+  }
 }
 
-// ═══════════════════════════════════════
-//   인덱싱 (RAG)
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
+//   인덱싱 & 그래프 구축
+// ════════════════════════════════════════
 async function startIndexing() {
   if (!requireApiKey()) return;
-  
   const progressDiv = document.getElementById('paperActionProgress');
   const progressText = document.getElementById('paperActionText');
   progressDiv.style.display = 'block';
   progressText.textContent = '문서 인덱싱 중...';
-  
   try {
-    const res = await axios.post(API + '/api/rag/index', { openai_api_key: getApiKey() });
-    activeIndexTask = res.data.task_id;
-    pollIndexStatus(activeIndexTask);
+    const res = await axios.post(API+'/api/rag/index', { openai_api_key: getApiKey() });
+    pollIndexStatus(res.data.task_id);
   } catch(e) {
     showToast('인덱싱 시작 실패', 'error');
     progressDiv.style.display = 'none';
   }
 }
-
 async function pollIndexStatus(taskId) {
   const progressText = document.getElementById('paperActionText');
   try {
-    const res = await axios.get(API + '/api/rag/index/status/' + taskId);
+    const res = await axios.get(API+'/api/rag/index/status/'+taskId);
     const data = res.data;
     if (data.status === 'running' || data.status === 'started') {
-      progressText.textContent = data.message || '인덱싱 중...';
-      setTimeout(() => pollIndexStatus(taskId), 2000);
+      progressText.textContent = data.message||'인덱싱 중...';
+      setTimeout(()=>pollIndexStatus(taskId), 2000);
     } else if (data.status === 'complete') {
       document.getElementById('paperActionProgress').style.display = 'none';
       showToast(`인덱싱 완료: ${data.total_indexed}개 문서`, 'success');
       loadStats();
     } else {
       document.getElementById('paperActionProgress').style.display = 'none';
-      showToast('인덱싱 오류: ' + data.message, 'error');
+      showToast('인덱싱 오류: '+data.message, 'error');
     }
-  } catch(e) {
-    setTimeout(() => pollIndexStatus(taskId), 2500);
-  }
+  } catch(e) { setTimeout(()=>pollIndexStatus(taskId), 2500); }
 }
 
-// ═══════════════════════════════════════
-//   그래프 구축
-// ═══════════════════════════════════════
 async function startBuildGraph() {
   if (!requireApiKey()) return;
-  
-  document.getElementById('graphBuildProgress').style.display = 'block';
+  const prog = document.getElementById('graphBuildProgress');
+  prog.style.display = 'block';
   document.getElementById('graphBuildText').textContent = '그래프 구축 시작 중...';
   document.getElementById('graphBuildBar').style.width = '5%';
-  
   try {
-    const res = await axios.post(API + '/api/graph/build', {
-      use_all_papers: true,
-      openai_api_key: getApiKey()
-    });
+    const res = await axios.post(API+'/api/graph/build', { use_all_papers: true, openai_api_key: getApiKey() });
     buildGraphTaskId = res.data.task_id;
     pollGraphBuildStatus(buildGraphTaskId);
   } catch(e) {
-    document.getElementById('graphBuildProgress').style.display = 'none';
-    showToast('그래프 구축 실패: ' + (e.response?.data?.detail || e.message), 'error');
+    prog.style.display = 'none';
+    showToast('그래프 구축 실패: '+(e.response?.data?.detail||e.message), 'error');
   }
 }
-
 async function pollGraphBuildStatus(taskId) {
   try {
-    const res = await axios.get(API + '/api/graph/build/status/' + taskId);
+    const res = await axios.get(API+'/api/graph/build/status/'+taskId);
     const data = res.data;
     const bar = document.getElementById('graphBuildBar');
     const text = document.getElementById('graphBuildText');
-
     if (data.status === 'running') {
-      const pct = data.total > 0 ? Math.min(95, (data.current / data.total * 100)) : 30;
-      bar.style.width = pct + '%';
-      text.textContent = data.message || '처리 중...';
-      setTimeout(() => pollGraphBuildStatus(taskId), 2000);
+      const pct = data.total > 0 ? Math.min(95, data.current/data.total*100) : 30;
+      bar.style.width = pct+'%';
+      text.textContent = data.message||'처리 중...';
+      setTimeout(()=>pollGraphBuildStatus(taskId), 2000);
     } else if (data.status === 'complete') {
       bar.style.width = '100%';
-      text.textContent = '✅ ' + (data.message || '완료');
-      setTimeout(() => {
-        document.getElementById('graphBuildProgress').style.display = 'none';
-        loadGraph();
-        loadStats();
-      }, 1500);
+      text.textContent = '✅ '+(data.message||'완료');
+      setTimeout(()=>{ document.getElementById('graphBuildProgress').style.display='none'; loadGraph(); loadStats(); }, 1500);
       showToast('그래프 구축 완료!', 'success');
     } else if (data.status === 'error') {
       document.getElementById('graphBuildProgress').style.display = 'none';
-      showToast('그래프 구축 오류: ' + data.message, 'error');
+      showToast('그래프 구축 오류: '+data.message, 'error');
     } else {
-      setTimeout(() => pollGraphBuildStatus(taskId), 2000);
+      setTimeout(()=>pollGraphBuildStatus(taskId), 2000);
     }
-  } catch(e) {
-    setTimeout(() => pollGraphBuildStatus(taskId), 2500);
-  }
+  } catch(e) { setTimeout(()=>pollGraphBuildStatus(taskId), 2500); }
 }
-
 async function autoIndexAndBuild() {
   if (!requireApiKey()) return;
   await startIndexing();
   await startBuildGraph();
 }
 
-// ═══════════════════════════════════════
-//   D3.js 그래프 시각화
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
+//   그래프 — 데이터 로드 & 필터 UI 구성
+// ════════════════════════════════════════
 async function loadGraph() {
   try {
-    const res = await axios.get(API + '/api/graph');
+    const res = await axios.get(API+'/api/graph');
     graphData = res.data;
-    renderGraph(graphData);
-    updateGraphStats(graphData);
-  } catch(e) {
-    console.error('그래프 로드 오류:', e);
-  }
+    filteredGraph = graphData;
+    buildSidebarFilters();
+    loadPhytoFocusList();
+    applyGraphFilters();
+  } catch(e) { console.error('그래프 로드 오류:', e); }
 }
 
+function buildSidebarFilters() {
+  // 노드 타입 체크박스
+  const typeCounts = {};
+  (graphData.nodes||[]).forEach(n => { typeCounts[n.type] = (typeCounts[n.type]||0)+1; });
+  const chips = document.getElementById('nodeTypeChips');
+  chips.innerHTML = Object.entries(NODE_COLORS).map(([type, color]) => {
+    const count = typeCounts[type] || 0;
+    const checked = activeNodeTypeFilters.has(type) ? 'checked' : '';
+    const labels = { Phytochemical:'파이토케미컬', HealthCondition:'건강 조건', Mechanism:'메커니즘', FoodSource:'식품 소스', Biomarker:'바이오마커', Study:'연구' };
+    return `<label class="node-chip ${activeNodeTypeFilters.has(type)?'active':''}" onclick="toggleNodeType('${type}',this)">
+      <input type="checkbox" ${checked} style="display:none">
+      <div class="chip-dot" style="background:${color}"></div>
+      <span>${labels[type]||type}</span>
+      <span class="chip-count">${count}</span>
+    </label>`;
+  }).join('');
+
+  // 관계 타입 체크박스
+  const relCounts = {};
+  (graphData.edges||[]).forEach(e => { relCounts[e.type] = (relCounts[e.type]||0)+1; });
+  const relChips = document.getElementById('relTypeChips');
+  relChips.innerHTML = Object.entries(relCounts).sort((a,b)=>b[1]-a[1]).map(([type, count]) => {
+    const color = EDGE_COLORS[type] || '#607D8B';
+    const active = activeRelTypeFilters.size===0 || activeRelTypeFilters.has(type);
+    return `<label class="rel-chip ${active?'active':''}" onclick="toggleRelType('${type}',this)">
+      <input type="checkbox" ${active?'checked':''} style="display:none">
+      <div class="rel-dot" style="background:${color}"></div>
+      <span>${type}</span>
+      <span class="chip-count">${count}</span>
+    </label>`;
+  }).join('');
+}
+
+async function loadPhytoFocusList() {
+  try {
+    const res = await axios.get(API+'/api/graph/phytochemicals');
+    const sel = document.getElementById('phytoFocusSelect');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— 전체 보기 —</option>' +
+      res.data.phytochemicals.map(p=>`<option value="${p.id}" ${p.id===cur?'selected':''}>${p.name}</option>`).join('');
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════
+//   그래프 — 필터 로직
+// ════════════════════════════════════════
+function toggleNodeType(type, labelEl) {
+  if (activeNodeTypeFilters.has(type)) {
+    if (activeNodeTypeFilters.size <= 1) return; // 최소 1개 유지
+    activeNodeTypeFilters.delete(type);
+    labelEl.classList.remove('active');
+  } else {
+    activeNodeTypeFilters.add(type);
+    labelEl.classList.add('active');
+  }
+  applyGraphFilters();
+}
+
+function toggleRelType(type, labelEl) {
+  if (activeRelTypeFilters.has(type)) {
+    activeRelTypeFilters.delete(type);
+    labelEl.classList.remove('active');
+  } else {
+    activeRelTypeFilters.add(type);
+    labelEl.classList.add('active');
+  }
+  applyGraphFilters();
+}
+
+function resetRelFilters() {
+  activeRelTypeFilters.clear();
+  document.querySelectorAll('.rel-chip').forEach(c => c.classList.add('active'));
+  applyGraphFilters();
+}
+
+function applyQuickView(view) {
+  currentQuickView = view;
+  document.getElementById('phytoFocusSelect').value = '';
+  currentFocusNodeId = null;
+  ['viewAll','viewPhytoHealth','viewFoodSource','viewMechanism'].forEach(id => {
+    document.getElementById(id).classList.remove('active-view');
+  });
+  const btnMap = { 'all':'viewAll','phyto-health':'viewPhytoHealth','food-source':'viewFoodSource','mechanism':'viewMechanism' };
+  if (btnMap[view]) document.getElementById(btnMap[view]).classList.add('active-view');
+  applyGraphFilters();
+  updateFilterTags();
+}
+
+function applyPhytoFocus() {
+  const val = document.getElementById('phytoFocusSelect').value;
+  currentFocusNodeId = val || null;
+  currentQuickView = 'all';
+  ['viewAll','viewPhytoHealth','viewFoodSource','viewMechanism'].forEach(id => {
+    document.getElementById(id).classList.remove('active-view');
+  });
+  applyGraphFilters();
+  updateFilterTags();
+}
+
+function filterGraphBySearch() {
+  applyGraphFilters();
+}
+
+function applyGraphFilters() {
+  let nodes = [...(graphData.nodes||[])];
+  let edges = [...(graphData.edges||[])];
+  const searchQ = (document.getElementById('graphSearchInput')?.value||'').toLowerCase();
+
+  // 1) 빠른 뷰 필터
+  if (currentQuickView === 'phyto-health') {
+    const allowed = new Set(['Phytochemical','HealthCondition']);
+    nodes = nodes.filter(n => allowed.has(n.type));
+  } else if (currentQuickView === 'food-source') {
+    const allowed = new Set(['Phytochemical','FoodSource']);
+    nodes = nodes.filter(n => allowed.has(n.type));
+  } else if (currentQuickView === 'mechanism') {
+    const allowed = new Set(['Phytochemical','Mechanism']);
+    nodes = nodes.filter(n => allowed.has(n.type));
+  }
+
+  // 2) 파이토케미컬 포커스 (1-hop)
+  if (currentFocusNodeId) {
+    const focusEdges = edges.filter(e => e.source===currentFocusNodeId||e.target===currentFocusNodeId);
+    const neighborIds = new Set([currentFocusNodeId]);
+    focusEdges.forEach(e => { neighborIds.add(e.source); neighborIds.add(e.target); });
+    nodes = nodes.filter(n => neighborIds.has(n.id));
+    edges = focusEdges;
+  }
+
+  // 3) 노드 타입 필터
+  nodes = nodes.filter(n => activeNodeTypeFilters.has(n.type));
+
+  // 4) 관계 타입 필터 (activeRelTypeFilters가 비어있으면 전체)
+  if (activeRelTypeFilters.size > 0) {
+    edges = edges.filter(e => activeRelTypeFilters.has(e.type));
+  }
+
+  // 5) 검색어 필터
+  if (searchQ) {
+    const matchIds = new Set(nodes.filter(n=>n.name.toLowerCase().includes(searchQ)).map(n=>n.id));
+    // 매칭 노드 + 이웃 포함
+    const extraEdges = edges.filter(e=>matchIds.has(e.source)||matchIds.has(e.target));
+    extraEdges.forEach(e=>{matchIds.add(e.source);matchIds.add(e.target);});
+    nodes = nodes.filter(n=>matchIds.has(n.id));
+    edges = extraEdges;
+  }
+
+  // 6) 엣지를 남은 노드 기준으로 정리
+  const nodeIdSet = new Set(nodes.map(n=>n.id));
+  edges = edges.filter(e => nodeIdSet.has(e.source) && nodeIdSet.has(e.target));
+
+  filteredGraph = { nodes, edges };
+  renderGraph(filteredGraph);
+  updateGraphStats(filteredGraph);
+  updateFilterTags();
+}
+
+function updateFilterTags() {
+  const container = document.getElementById('activeFilterTags');
+  const tags = [];
+  const viewLabels = { 'all':'전체', 'phyto-health':'파이토↔건강', 'food-source':'파이토↔식품', 'mechanism':'파이토↔메커니즘' };
+  if (currentQuickView !== 'all') {
+    tags.push({ label: viewLabels[currentQuickView], key: 'view' });
+  }
+  if (currentFocusNodeId) {
+    const node = graphData.nodes?.find(n=>n.id===currentFocusNodeId);
+    tags.push({ label: `포커스: ${node?.name||currentFocusNodeId}`, key: 'focus' });
+  }
+  if (activeRelTypeFilters.size > 0) {
+    tags.push({ label: `관계: ${[...activeRelTypeFilters].join(',')}`, key: 'rel' });
+  }
+  container.innerHTML = tags.map(t=>
+    `<span class="filter-tag">${t.label}<span class="filter-tag-remove" onclick="removeFilterTag('${t.key}')">✕</span></span>`
+  ).join('');
+}
+
+function removeFilterTag(key) {
+  if (key==='view') applyQuickView('all');
+  else if (key==='focus') { document.getElementById('phytoFocusSelect').value=''; applyPhytoFocus(); }
+  else if (key==='rel') resetRelFilters();
+}
+
+// ════════════════════════════════════════
+//   D3.js 그래프 렌더링
+// ════════════════════════════════════════
 function renderGraph(data) {
   const container = document.getElementById('graph-container');
+  const svgEl = document.getElementById('graph-svg');
   const svg = d3.select('#graph-svg');
   svg.selectAll('*').remove();
 
@@ -945,266 +1368,396 @@ function renderGraph(data) {
   }
   document.getElementById('graphEmpty').style.display = 'none';
 
-  const zoom = d3.zoom().scaleExtent([0.1, 4]).on('zoom', (e) => g.attr('transform', e.transform));
-  svg.call(zoom);
+  // 줌
+  graphZoom = d3.zoom().scaleExtent([0.05, 5]).on('zoom', (e) => {
+    graphSvgG.attr('transform', e.transform);
+    updateMinimap(e.transform);
+  });
+  svg.call(graphZoom);
+  graphSvgG = svg.append('g');
 
-  const g = svg.append('g');
+  // 마커
+  const defs = svg.append('defs');
+  Object.entries(EDGE_COLORS).forEach(([type, color]) => {
+    defs.append('marker')
+      .attr('id', 'arrow-'+type).attr('viewBox','0 -4 8 8').attr('refX',18).attr('refY',0)
+      .attr('markerWidth',5).attr('markerHeight',5).attr('orient','auto')
+      .append('path').attr('d','M0,-4L8,0L0,4').attr('fill', color).attr('opacity',0.7);
+  });
 
-  // 마커 (화살표)
-  svg.append('defs').append('marker')
-    .attr('id', 'arrow').attr('viewBox', '0 -5 10 10').attr('refX', 20).attr('refY', 0)
-    .attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto')
-    .append('path').attr('d', 'M0,-5L10,0L0,5').attr('fill', '#475569');
+  // 노드 데이터 복사 (시뮬레이션용 위치 초기화)
+  const nodesCopy = data.nodes.map(n => ({...n}));
+  const edgesCopy = data.edges.map(e => ({...e}));
 
   // 엣지
-  const link = g.append('g').selectAll('line')
-    .data(data.edges).enter().append('line')
+  const link = graphSvgG.append('g').selectAll('line')
+    .data(edgesCopy).enter().append('line')
     .attr('class', 'link')
-    .attr('stroke', d => getEdgeColor(d.type))
-    .attr('stroke-width', d => Math.min(1 + (d.weight || 1) * 0.5, 4))
-    .attr('marker-end', 'url(#arrow)');
+    .attr('stroke', d => EDGE_COLORS[d.type]||'#607D8B')
+    .attr('stroke-width', d => Math.min(0.8 + (d.weight||1)*0.4, 3.5))
+    .attr('marker-end', d => `url(#arrow-${d.type||'ASSOCIATED_WITH'})`);
 
   // 엣지 레이블
-  const linkLabel = g.append('g').selectAll('text')
-    .data(data.edges).enter().append('text')
+  const linkLabel = graphSvgG.append('g').selectAll('text')
+    .data(edgesCopy).enter().append('text')
     .attr('class', 'link-label')
-    .text(d => d.label || d.type)
-    .attr('text-anchor', 'middle');
+    .text(d => d.label||d.type)
+    .attr('text-anchor','middle')
+    .style('display', showEdgeLabelsFlag ? 'block' : 'none');
 
-  // 노드 그룹
-  const node = g.append('g').selectAll('g')
-    .data(data.nodes).enter().append('g')
+  // 노드
+  const node = graphSvgG.append('g').selectAll('g')
+    .data(nodesCopy).enter().append('g')
     .attr('class', 'node')
     .call(d3.drag()
-      .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
-      .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
-    .on('click', (e, d) => showNodeDetail(d))
-    .on('mouseover', (e, d) => showTooltip(e, d))
-    .on('mouseout', () => document.getElementById('graphTooltip').style.display = 'none');
+      .on('start', (e,d)=>{ if(!e.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag',  (e,d)=>{ d.fx=e.x; d.fy=e.y; })
+      .on('end',   (e,d)=>{ if(!e.active) sim.alphaTarget(0); d.fx=null; d.fy=null; }))
+    .on('click', (e,d) => { e.stopPropagation(); showNodeDetail(d); highlightNode(d, nodesCopy, edgesCopy, link, node); })
+    .on('mouseover', (e,d) => {
+      showTooltip(e, d);
+      if (document.getElementById('highlightNeighbors').checked) highlightHover(d, nodesCopy, edgesCopy, link, node);
+    })
+    .on('mouseout', () => {
+      document.getElementById('graphTooltip').style.display = 'none';
+      if (document.getElementById('highlightNeighbors').checked) resetHighlight(link, node);
+    });
+
+  svg.on('click', ()=>{ resetHighlight(link, node); });
 
   node.append('circle')
-    .attr('r', d => d.size || 8)
-    .attr('fill', d => d.color || '#999')
-    .attr('stroke', '#1e293b').attr('stroke-width', 2);
+    .attr('r', d => d.size||8)
+    .attr('fill', d => d.color||'#999')
+    .attr('stroke', '#0f172a').attr('stroke-width', 1.5);
 
   node.append('text')
-    .attr('dy', d => -(d.size || 8) - 4)
-    .attr('text-anchor', 'middle')
-    .text(d => d.name.length > 20 ? d.name.substring(0, 18) + '…' : d.name);
+    .attr('dy', d => -(d.size||8)-4)
+    .attr('text-anchor','middle')
+    .style('font-size', d => d.type==='Phytochemical'?'12px':'10px')
+    .style('font-weight', d => d.type==='Phytochemical'?'700':'400')
+    .style('fill', '#e2e8f0')
+    .style('text-shadow', '0 1px 3px #000')
+    .text(d => d.name.length > 22 ? d.name.substring(0,20)+'…' : d.name);
 
-  // 시뮬레이션
-  const sim = d3.forceSimulation(data.nodes)
-    .force('link', d3.forceLink(data.edges).id(d => d.id).distance(120).strength(0.5))
-    .force('charge', d3.forceManyBody().strength(-300))
-    .force('center', d3.forceCenter(W / 2, H / 2))
-    .force('collision', d3.forceCollide().radius(d => (d.size || 8) + 15));
+  // Force 시뮬레이션
+  const sim = d3.forceSimulation(nodesCopy)
+    .force('link', d3.forceLink(edgesCopy).id(d=>d.id).distance(d => {
+      // 파이토케미컬-건강조건 거리는 더 넓게
+      const types = [d.source?.type, d.target?.type];
+      if (types.includes('Phytochemical') && types.includes('HealthCondition')) return 160;
+      return 100;
+    }).strength(0.4))
+    .force('charge', d3.forceManyBody().strength(d => d.type==='Phytochemical'?-400:-220))
+    .force('center', d3.forceCenter(W/2, H/2))
+    .force('collision', d3.forceCollide().radius(d => (d.size||8)+12));
 
   graphSimulation = sim;
 
   sim.on('tick', () => {
-    link
-      .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
-      .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
-    linkLabel
-      .attr('x', d => (d.source.x + d.target.x) / 2)
-      .attr('y', d => (d.source.y + d.target.y) / 2);
-    node.attr('transform', d => `translate(${d.x},${d.y})`);
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+        .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    linkLabel.attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2);
+    node.attr('transform', d=>`translate(${d.x},${d.y})`);
+    updateMinimapNodes(nodesCopy);
+  });
+
+  // 미니맵 초기화
+  initMinimap(nodesCopy, W, H);
+}
+
+// ════════════════════════════════════════
+//   강조 효과
+// ════════════════════════════════════════
+function highlightHover(d, nodes, edges, linkSel, nodeSel) {
+  const connected = new Set([d.id]);
+  edges.forEach(e => {
+    const sid = typeof e.source==='object'?e.source.id:e.source;
+    const tid = typeof e.target==='object'?e.target.id:e.target;
+    if (sid===d.id||tid===d.id) { connected.add(sid); connected.add(tid); }
+  });
+  nodeSel.classed('dimmed', n => !connected.has(n.id));
+  linkSel.classed('highlighted', e => {
+    const sid = typeof e.source==='object'?e.source.id:e.source;
+    const tid = typeof e.target==='object'?e.target.id:e.target;
+    return sid===d.id||tid===d.id;
+  }).classed('dimmed', e => {
+    const sid = typeof e.source==='object'?e.source.id:e.source;
+    const tid = typeof e.target==='object'?e.target.id:e.target;
+    return !(sid===d.id||tid===d.id);
   });
 }
-
-function getEdgeColor(type) {
-  const colors = {
-    IMPROVES: '#4CAF50', REDUCES: '#F44336', INHIBITS: '#FF5722',
-    ACTIVATES: '#03A9F4', FOUND_IN: '#FF9800', PREVENTS: '#8BC34A',
-    INCREASES: '#FFEB3B', ASSOCIATED_WITH: '#607D8B', AFFECTS: '#9E9E9E'
-  };
-  return colors[type] || '#607D8B';
+function highlightNode(d, nodes, edges, linkSel, nodeSel) {
+  nodeSel.classed('focused', n => n.id===d.id);
+}
+function resetHighlight(linkSel, nodeSel) {
+  nodeSel.classed('dimmed', false);
+  linkSel.classed('highlighted', false).classed('dimmed', false);
 }
 
+// ════════════════════════════════════════
+//   미니맵
+// ════════════════════════════════════════
+let minimapNodes = [];
+function initMinimap(nodes, W, H) {
+  minimapNodes = nodes;
+  const mmSvg = d3.select('#minimap-svg');
+  mmSvg.selectAll('*').remove();
+  mmSvg.append('rect').attr('width','100%').attr('height','100%').attr('fill','transparent');
+  mmSvg.append('g').attr('class','mm-nodes');
+  mmSvg.append('rect').attr('class','minimap-viewport').attr('x',0).attr('y',0).attr('width',140).attr('height',90);
+}
+function updateMinimapNodes(nodes) {
+  if (!document.getElementById('showMinimap').checked) return;
+  const mmSvg = d3.select('#minimap-svg');
+  const g = mmSvg.select('.mm-nodes');
+  if (g.empty()) return;
+  const xv = nodes.map(n=>n.x||0), yv = nodes.map(n=>n.y||0);
+  const xMin=Math.min(...xv), xMax=Math.max(...xv), yMin=Math.min(...yv), yMax=Math.max(...yv);
+  const sx = 130/(xMax-xMin||1), sy = 80/(yMax-yMin||1), sc = Math.min(sx,sy)*0.85;
+  const sel = g.selectAll('circle').data(nodes, d=>d.id);
+  sel.enter().append('circle').attr('class','minimap-node').attr('r',2)
+    .attr('fill', d => d.color||'#999').attr('opacity',0.7)
+    .merge(sel)
+    .attr('cx', d=>((d.x||0)-xMin)*sc+5).attr('cy', d=>((d.y||0)-yMin)*sc+5);
+  sel.exit().remove();
+}
+function updateMinimap(transform) {
+  if (!document.getElementById('showMinimap').checked) return;
+  // viewport 사각형 업데이트는 간소화 (생략 가능)
+}
+function toggleMinimap(visible) {
+  document.getElementById('minimap').style.display = visible ? 'block' : 'none';
+}
+
+// ════════════════════════════════════════
+//   그래프 컨트롤
+// ════════════════════════════════════════
+function toggleEdgeLabels(show) {
+  showEdgeLabelsFlag = show;
+  d3.selectAll('.link-label').style('display', show ? 'block' : 'none');
+}
+function zoomIn() {
+  d3.select('#graph-svg').transition().call(graphZoom?.scaleBy, 1.4);
+}
+function zoomOut() {
+  d3.select('#graph-svg').transition().call(graphZoom?.scaleBy, 0.7);
+}
+function centerGraph() {
+  const container = document.getElementById('graph-container');
+  d3.select('#graph-svg').transition().duration(500)
+    .call(graphZoom?.transform, d3.zoomIdentity.translate(container.clientWidth/2, container.clientHeight/2).scale(0.8));
+}
+function resetGraphView() {
+  currentQuickView = 'all';
+  currentFocusNodeId = null;
+  activeRelTypeFilters.clear();
+  document.getElementById('phytoFocusSelect').value = '';
+  document.getElementById('graphSearchInput').value = '';
+  activeNodeTypeFilters = new Set(Object.keys(NODE_COLORS));
+  ['viewAll','viewPhytoHealth','viewFoodSource','viewMechanism'].forEach(id=>{
+    document.getElementById(id)?.classList.remove('active-view');
+  });
+  document.getElementById('viewAll')?.classList.add('active-view');
+  buildSidebarFilters();
+  applyGraphFilters();
+  d3.select('#graph-svg').transition().duration(500).call(graphZoom?.transform, d3.zoomIdentity);
+}
+function toggleFocusMode() {
+  focusModeEnabled = !focusModeEnabled;
+  const btn = document.getElementById('btnFocusMode');
+  btn.classList.toggle('active', focusModeEnabled);
+  showToast(focusModeEnabled ? '포커스 모드 ON — 노드 클릭 시 이웃만 표시' : '포커스 모드 OFF', 'info');
+}
+
+// ════════════════════════════════════════
+//   툴팁
+// ════════════════════════════════════════
 function showTooltip(event, d) {
   const tooltip = document.getElementById('graphTooltip');
+  const container = document.getElementById('graph-container');
+  const rect = container.getBoundingClientRect();
   tooltip.style.display = 'block';
-  tooltip.style.left = (event.offsetX + 15) + 'px';
-  tooltip.style.top = (event.offsetY - 10) + 'px';
+  const tx = event.clientX - rect.left + 15;
+  const ty = event.clientY - rect.top - 10;
+  tooltip.style.left = Math.min(tx, rect.width-260)+'px';
+  tooltip.style.top  = Math.max(ty, 5)+'px';
+  const typeLabels = { Phytochemical:'파이토케미컬', HealthCondition:'건강 조건', Mechanism:'메커니즘', FoodSource:'식품 소스', Biomarker:'바이오마커' };
   tooltip.innerHTML = `
-    <div style="font-weight:700;color:${d.color};margin-bottom:6px">${d.name}</div>
-    <div style="color:#94a3b8;font-size:0.75rem">${d.type}</div>
-    ${d.description ? `<div style="margin-top:6px;font-size:0.8rem">${d.description.substring(0,120)}</div>` : ''}
-    <div style="margin-top:6px;font-size:0.75rem;color:#64748b">언급 횟수: ${d.mention_count || 1}</div>
-  `;
+    <div style="font-weight:700;color:${d.color};margin-bottom:5px;font-size:0.875rem">${d.name}</div>
+    <div style="color:#64748b;font-size:0.73rem;margin-bottom:5px">${typeLabels[d.type]||d.type}</div>
+    ${d.description?`<div style="font-size:0.78rem;margin-bottom:5px">${d.description.substring(0,100)}…</div>`:''}
+    <div style="font-size:0.72rem;color:#475569">논문 언급: <strong style="color:#34d399">${d.mention_count||1}회</strong></div>
+    <div style="font-size:0.7rem;color:#334155;margin-top:4px">클릭하면 상세 정보 표시</div>`;
 }
 
-function showNodeDetail(d) {
+// ════════════════════════════════════════
+//   노드 상세 패널
+// ════════════════════════════════════════
+let currentDetailNode = null;
+async function showNodeDetail(d) {
+  currentDetailNode = d;
   const panel = document.getElementById('nodeDetailPanel');
   panel.style.display = 'block';
   document.getElementById('nodeDetailTitle').textContent = d.name;
-  document.getElementById('nodeDetailContent').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-      <div>
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">타입</div>
-        <span class="badge" style="background:${d.color}22;color:${d.color}">${d.type}</span>
-      </div>
-      <div>
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">언급 횟수</div>
-        <div style="font-weight:700;color:#34d399">${d.mention_count || 1}</div>
-      </div>
-    </div>
-    ${d.description ? `<div style="margin-top:1rem"><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">설명</div><div style="font-size:0.85rem">${d.description}</div></div>` : ''}
-    ${d.pmids?.length ? `<div style="margin-top:1rem"><div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px">관련 논문 (PMID)</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">${d.pmids.map(id => `<a href="https://pubmed.ncbi.nlm.nih.gov/${id}/" target="_blank" class="badge" style="background:#065f46;color:#34d399;text-decoration:none">${id}</a>`).join('')}</div>
-    </div>` : ''}
-  `;
-}
+  const typeLabels = { Phytochemical:'파이토케미컬', HealthCondition:'건강 조건', Mechanism:'메커니즘', FoodSource:'식품 소스', Biomarker:'바이오마커' };
+  document.getElementById('nodeDetailTypeBadge').innerHTML =
+    `<span class="badge" style="background:${d.color}22;color:${d.color};border:1px solid ${d.color}44">${typeLabels[d.type]||d.type}</span>`;
 
-function filterGraph() {
-  const search = document.getElementById('graphSearchInput').value.toLowerCase();
-  const type = document.getElementById('nodeTypeFilter').value;
-  
-  let filtered = { ...graphData };
-  
-  if (search || type) {
-    filtered.nodes = graphData.nodes.filter(n => 
-      (!search || n.name.toLowerCase().includes(search)) &&
-      (!type || n.type === type)
-    );
-    const nodeIds = new Set(filtered.nodes.map(n => n.id));
-    filtered.edges = graphData.edges.filter(e => nodeIds.has(e.source) || nodeIds.has(e.target));
+  try {
+    const res = await axios.get(API+`/api/graph/node/${encodeURIComponent(d.id)}`);
+    const info = res.data;
+
+    // 통계
+    document.getElementById('nodeDetailStats').innerHTML = `
+      <div class="detail-stat"><div class="detail-stat-num">${info.degree}</div><div class="detail-stat-label">연결된 노드</div></div>
+      <div class="detail-stat"><div class="detail-stat-num">${info.out_edges.length}</div><div class="detail-stat-label">나가는 관계</div></div>
+      <div class="detail-stat"><div class="detail-stat-num">${(d.pmids||[]).length}</div><div class="detail-stat-label">관련 논문</div></div>`;
+
+    // 연결 노드 목록
+    const neighborHtml = info.neighbors.length ? `
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:7px;font-weight:600">연결된 노드</div>
+        <div class="neighbor-list">
+          ${info.neighbors.map(n => {
+            // 이 노드와의 관계 타입 찾기
+            const edge = [...info.out_edges,...info.in_edges].find(e=>{
+              const sid=typeof e.source==='object'?e.source.id:e.source;
+              const tid=typeof e.target==='object'?e.target.id:e.target;
+              return (sid===d.id&&tid===n.id)||(sid===n.id&&tid===d.id);
+            });
+            const relColor = EDGE_COLORS[edge?.type]||'#607D8B';
+            return `<div class="neighbor-item" onclick="showNodeDetail(${JSON.stringify({...n,name:n.name,type:n.type,color:n.color,mention_count:n.mention_count,pmids:n.pmids,description:n.description,id:n.id}).replace(/"/g,'&quot;')})">
+              <div class="neighbor-dot" style="background:${n.color||'#999'}"></div>
+              <span style="flex:1;font-size:0.8rem">${n.name}</span>
+              ${edge?`<span class="edge-badge" style="background:${relColor}22;color:${relColor}">${edge.label||edge.type}</span>`:''}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : '<div style="color:var(--text-muted);font-size:0.82rem">연결된 노드 없음</div>';
+
+    // 설명 + 관련 논문
+    const descHtml = d.description ? `
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:7px;font-weight:600">설명</div>
+        <div style="font-size:0.82rem;line-height:1.6;color:var(--text-muted)">${d.description}</div>
+        ${(d.pmids||[]).length?`
+          <div style="margin-top:10px">
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px;font-weight:600">관련 논문 (PMID)</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px">
+              ${d.pmids.map(id=>`<a href="https://pubmed.ncbi.nlm.nih.gov/${id}/" target="_blank" class="badge" style="background:#065f46;color:#34d399;text-decoration:none;border:1px solid #16a34a22">PMID:${id}</a>`).join('')}
+            </div>
+          </div>` : ''}
+      </div>` : `<div style="color:var(--text-muted);font-size:0.82rem">설명 없음</div>`;
+
+    document.getElementById('nodeDetailContent').innerHTML = `
+      <div>${neighborHtml}</div>
+      <div>${descHtml}</div>`;
+
+  } catch(e) {
+    document.getElementById('nodeDetailContent').innerHTML =
+      `<div style="color:var(--text-muted);font-size:0.82rem">상세 정보를 불러올 수 없습니다</div>`;
   }
-  
-  renderGraph(filtered);
+
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function resetGraphZoom() {
-  d3.select('#graph-svg').transition().call(
-    d3.zoom().transform, d3.zoomIdentity
-  );
+function focusOnCurrentNode() {
+  if (!currentDetailNode) return;
+  document.getElementById('phytoFocusSelect').value = '';
+  currentFocusNodeId = currentDetailNode.id;
+  currentQuickView = 'all';
+  applyGraphFilters();
+  showToast(`"${currentDetailNode.name}" 중심으로 표시`, 'success');
 }
 
 function updateGraphStats(data) {
-  const nodes = data.nodes || [];
+  const nodes = data.nodes||[];
   document.getElementById('g-nodes').textContent = nodes.length;
-  document.getElementById('g-edges').textContent = (data.edges || []).length;
-  document.getElementById('g-phyto').textContent = nodes.filter(n => n.type === 'Phytochemical').length;
-  document.getElementById('g-health').textContent = nodes.filter(n => n.type === 'HealthCondition').length;
+  document.getElementById('g-edges').textContent = (data.edges||[]).length;
+  document.getElementById('g-phyto').textContent = nodes.filter(n=>n.type==='Phytochemical').length;
+  document.getElementById('g-health').textContent = nodes.filter(n=>n.type==='HealthCondition').length;
 }
 
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
 //   RAG 챗봇
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
 async function loadRagStats() {
   try {
     const [ragRes, graphRes] = await Promise.all([
-      axios.get(API + '/api/rag/stats'),
-      axios.get(API + '/api/graph/stats')
+      axios.get(API+'/api/rag/stats'),
+      axios.get(API+'/api/graph/stats')
     ]);
-    document.getElementById('ragIndexedCount').textContent = ragRes.data.indexed_documents || 0;
-    document.getElementById('ragGraphNodes').textContent = graphRes.data.total_nodes || 0;
+    document.getElementById('ragIndexedCount').textContent = ragRes.data.indexed_documents||0;
+    document.getElementById('ragGraphNodes').textContent = graphRes.data.total_nodes||0;
   } catch(e) {}
 }
-
 async function sendChat() {
   if (!requireApiKey()) return;
   const input = document.getElementById('chatInput');
   const msg = input.value.trim();
   if (!msg) return;
-  
   input.value = '';
-  const btn = document.getElementById('chatSendBtn');
-  btn.disabled = true;
-  
+  document.getElementById('chatSendBtn').disabled = true;
   appendMessage('user', msg);
   appendThinking();
-  
-  chatHistory.push({ role: 'user', content: msg });
-  
+  chatHistory.push({ role:'user', content:msg });
   try {
-    const res = await axios.post(API + '/api/rag/chat', {
-      message: msg,
-      chat_history: chatHistory.slice(-6),
-      openai_api_key: getApiKey()
-    });
-    
-    const data = res.data;
+    const res = await axios.post(API+'/api/rag/chat', { message:msg, chat_history:chatHistory.slice(-6), openai_api_key:getApiKey() });
     removeThinking();
-    appendBotMessage(data.answer, data.sources);
-    chatHistory.push({ role: 'assistant', content: data.answer });
+    appendBotMessage(res.data.answer, res.data.sources);
+    chatHistory.push({ role:'assistant', content:res.data.answer });
   } catch(e) {
     removeThinking();
-    appendMessage('bot', '오류가 발생했습니다: ' + (e.response?.data?.detail || e.message));
-  } finally {
-    btn.disabled = false;
-  }
+    appendMessage('bot', '오류가 발생했습니다: '+(e.response?.data?.detail||e.message));
+  } finally { document.getElementById('chatSendBtn').disabled = false; }
 }
-
 function appendMessage(role, content) {
-  const container = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = `msg-bubble msg-${role}`;
-  div.textContent = content;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
+  const c = document.getElementById('chat-messages');
+  const d = document.createElement('div');
+  d.className = `msg-bubble msg-${role}`;
+  d.textContent = content;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
 }
-
 function appendBotMessage(content, sources) {
-  const container = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'msg-bubble msg-bot';
-  
-  // 마크다운 기본 변환
-  let html = content
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n/g, '<br>');
-  
-  let sourcesHtml = '';
-  if (sources && sources.length > 0) {
-    sourcesHtml = `<div class="msg-sources">📚 참고 논문:<br>` +
-      sources.map(s => `<a href="${s.url}" target="_blank" class="source-link">
-        ${s.is_meta_analysis ? '🔬' : '📄'} ${(s.title || '').substring(0, 60)}... (${s.year || ''})
+  const c = document.getElementById('chat-messages');
+  const d = document.createElement('div');
+  d.className = 'msg-bubble msg-bot';
+  let html = content.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  let srcHtml = '';
+  if (sources?.length) {
+    srcHtml = `<div class="msg-sources">📚 참고 논문:<br>`+
+      sources.map(s=>`<a href="${s.url}" target="_blank" class="source-link">
+        ${s.is_meta_analysis?'🔬':'📄'} ${(s.title||'').substring(0,55)}… (${s.year||''})
       </a>`).join('<br>') + '</div>';
   }
-  
-  div.innerHTML = html + sourcesHtml;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
+  d.innerHTML = html + srcHtml;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
 }
-
 function appendThinking() {
-  const container = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'msg-thinking';
-  div.id = 'thinkingBubble';
-  div.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
+  const c = document.getElementById('chat-messages');
+  const d = document.createElement('div');
+  d.className = 'msg-thinking'; d.id = 'thinkingBubble';
+  d.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
 }
+function removeThinking() { document.getElementById('thinkingBubble')?.remove(); }
+function setQuestion(q) { document.getElementById('chatInput').value = q.trim(); document.getElementById('chatInput').focus(); }
 
-function removeThinking() {
-  const el = document.getElementById('thinkingBubble');
-  if (el) el.remove();
+// ════════════════════════════════════════
+//   유틸리티
+// ════════════════════════════════════════
+function escapeHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+function escapeQuotes(str) { return String(str||'').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n'); }
 
-function setQuestion(q) {
-  document.getElementById('chatInput').value = q;
-  document.getElementById('chatInput').focus();
-}
-
-// ═══════════════════════════════════════
-//   토스트
-// ═══════════════════════════════════════
 let toastTimer = null;
-function showToast(msg, type = 'success') {
+function showToast(msg, type='success') {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'show ' + type;
+  el.textContent = msg; el.className = 'show '+type;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 3200);
 }
-
-// ═══════════════════════════════════════
-//   주기적 통계 갱신
-// ═══════════════════════════════════════
-setInterval(loadStats, 30000);
 </script>
 </body>
 </html>

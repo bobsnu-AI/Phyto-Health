@@ -186,9 +186,13 @@ async def get_papers(
     page: int = 1,
     limit: int = 20,
     meta_only: bool = False,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    year: Optional[str] = None,
+    journal: Optional[str] = None,
+    pub_type: Optional[str] = None,
+    sort_by: str = "year"
 ):
-    """저장된 논문 목록 조회"""
+    """저장된 논문 목록 조회 — 다중 필터 + 정렬 지원"""
     papers = load_all_papers()
     
     if meta_only:
@@ -200,8 +204,25 @@ async def get_papers(
                   search_lower in p.get("title", "").lower() or
                   search_lower in p.get("abstract", "").lower()]
     
-    # 연도 내림차순 정렬
-    papers.sort(key=lambda x: x.get("year", "0"), reverse=True)
+    if year:
+        papers = [p for p in papers if p.get("year") == year]
+    
+    if journal:
+        j_lower = journal.lower()
+        papers = [p for p in papers if j_lower in p.get("journal", "").lower()]
+    
+    if pub_type == "meta":
+        papers = [p for p in papers if p.get("is_meta_analysis")]
+    elif pub_type == "sr":
+        papers = [p for p in papers if p.get("is_systematic_review")]
+
+    # 정렬
+    if sort_by == "year":
+        papers.sort(key=lambda x: x.get("year", "0"), reverse=True)
+    elif sort_by == "title":
+        papers.sort(key=lambda x: x.get("title", "").lower())
+    elif sort_by == "journal":
+        papers.sort(key=lambda x: x.get("journal", "").lower())
     
     total = len(papers)
     start = (page - 1) * limit
@@ -281,22 +302,147 @@ async def get_build_status(task_id: str):
 
 
 @app.get("/api/graph")
-async def get_graph(search: Optional[str] = None, node_type: Optional[str] = None):
-    """그래프 데이터 반환"""
-    if search:
+async def get_graph(
+    search: Optional[str] = None,
+    node_type: Optional[str] = None,
+    relation_type: Optional[str] = None,
+    focus_node: Optional[str] = None,
+    phytochemical: Optional[str] = None,
+    food_source_view: bool = False
+):
+    """그래프 데이터 반환 — 다중 필터 지원"""
+    if focus_node:
+        # 특정 노드 중심 서브그래프 (1-hop 이웃)
+        data = load_graph()
+        target = next((n for n in data["nodes"] if n["id"] == focus_node), None)
+        if target:
+            connected_edges = [e for e in data["edges"]
+                               if e["source"] == focus_node or e["target"] == focus_node]
+            neighbor_ids = set()
+            for e in connected_edges:
+                neighbor_ids.add(e["source"])
+                neighbor_ids.add(e["target"])
+            neighbor_ids.add(focus_node)
+            data = {
+                "nodes": [n for n in data["nodes"] if n["id"] in neighbor_ids],
+                "edges": connected_edges
+            }
+    elif phytochemical:
+        # 특정 파이토케미컬 중심 서브그래프
+        data = load_graph()
+        phyto_lower = phytochemical.lower()
+        phyto_nodes = [n for n in data["nodes"]
+                       if n.get("type") == "Phytochemical"
+                       and phyto_lower in n.get("name", "").lower()]
+        phyto_ids = {n["id"] for n in phyto_nodes}
+        connected_edges = [e for e in data["edges"]
+                           if e["source"] in phyto_ids or e["target"] in phyto_ids]
+        neighbor_ids = phyto_ids.copy()
+        for e in connected_edges:
+            neighbor_ids.add(e["source"])
+            neighbor_ids.add(e["target"])
+        data = {
+            "nodes": [n for n in data["nodes"] if n["id"] in neighbor_ids],
+            "edges": connected_edges
+        }
+    elif search:
         data = search_graph(search)
     else:
         data = load_graph()
-    
+
+    # 식품 소스 전용 뷰: Phytochemical ↔ FoodSource 관계만
+    if food_source_view:
+        allowed_types = {"Phytochemical", "FoodSource"}
+        fs_nodes = [n for n in data.get("nodes", []) if n.get("type") in allowed_types]
+        fs_ids = {n["id"] for n in fs_nodes}
+        fs_edges = [e for e in data.get("edges", [])
+                    if e["source"] in fs_ids and e["target"] in fs_ids]
+        data = {"nodes": fs_nodes, "edges": fs_edges}
+
     # 노드 타입 필터
     if node_type:
         filtered_nodes = [n for n in data.get("nodes", []) if n.get("type") == node_type]
         node_ids = {n["id"] for n in filtered_nodes}
-        filtered_edges = [e for e in data.get("edges", []) 
-                         if e["source"] in node_ids and e["target"] in node_ids]
+        filtered_edges = [e for e in data.get("edges", [])
+                          if e["source"] in node_ids and e["target"] in node_ids]
         data = {"nodes": filtered_nodes, "edges": filtered_edges}
-    
+
+    # 관계 타입 필터 (엣지만, 연결된 노드는 유지)
+    if relation_type:
+        filtered_edges = [e for e in data.get("edges", []) if e.get("type") == relation_type]
+        connected_ids = set()
+        for e in filtered_edges:
+            connected_ids.add(e["source"])
+            connected_ids.add(e["target"])
+        filtered_nodes = [n for n in data.get("nodes", []) if n["id"] in connected_ids]
+        data = {"nodes": filtered_nodes, "edges": filtered_edges}
+
     return data
+
+
+@app.get("/api/graph/node/{node_id}")
+async def get_node_detail(node_id: str):
+    """특정 노드 상세 정보 + 연결 노드 목록"""
+    data = load_graph()
+    node = next((n for n in data["nodes"] if n["id"] == node_id), None)
+    if not node:
+        raise HTTPException(404, "노드를 찾을 수 없습니다")
+
+    # 연결된 엣지 + 이웃 노드
+    out_edges = [e for e in data["edges"] if e["source"] == node_id]
+    in_edges  = [e for e in data["edges"] if e["target"] == node_id]
+    neighbor_ids = {e["target"] for e in out_edges} | {e["source"] for e in in_edges}
+    neighbors = [n for n in data["nodes"] if n["id"] in neighbor_ids]
+
+    return {
+        "node": node,
+        "out_edges": out_edges,
+        "in_edges": in_edges,
+        "neighbors": neighbors,
+        "degree": len(neighbor_ids)
+    }
+
+
+@app.get("/api/graph/phytochemicals")
+async def get_phytochemical_nodes():
+    """그래프 내 파이토케미컬 노드 목록 (필터 드롭다운용)"""
+    data = load_graph()
+    phytos = [{"id": n["id"], "name": n["name"]}
+              for n in data.get("nodes", []) if n.get("type") == "Phytochemical"]
+    phytos.sort(key=lambda x: x["name"])
+    return {"phytochemicals": phytos}
+
+
+@app.get("/api/graph/relation-types")
+async def get_relation_types():
+    """그래프 내 관계 타입 목록 + 카운트"""
+    data = load_graph()
+    counts: dict = {}
+    for e in data.get("edges", []):
+        t = e.get("type", "UNKNOWN")
+        counts[t] = counts.get(t, 0) + 1
+    return {"relation_types": [{"type": k, "count": v} for k, v in sorted(counts.items())]}
+
+
+@app.get("/api/papers/years")
+async def get_paper_years():
+    """논문 연도 목록 (필터 드롭다운용)"""
+    papers = load_all_papers()
+    years = sorted({p.get("year", "") for p in papers if p.get("year")}, reverse=True)
+    return {"years": years}
+
+
+@app.get("/api/papers/journals")
+async def get_paper_journals():
+    """논문 저널 목록 (상위 30개)"""
+    papers = load_all_papers()
+    counts: dict = {}
+    for p in papers:
+        j = p.get("journal", "").strip()
+        if j:
+            counts[j] = counts.get(j, 0) + 1
+    sorted_j = sorted(counts.items(), key=lambda x: -x[1])[:30]
+    return {"journals": [j for j, _ in sorted_j]}
 
 
 @app.get("/api/graph/stats")
