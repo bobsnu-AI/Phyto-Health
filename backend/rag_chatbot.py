@@ -6,11 +6,13 @@ ChromaDB 벡터스토어 + OpenAI GPT 기반
 
 import json
 import os
+import re
 from pathlib import Path
 from typing import Optional
 import chromadb
 from chromadb.config import Settings
 from openai import OpenAI
+from graph_builder import find_subgraph_for_entities
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 CHROMA_DIR = DATA_DIR / "chroma_db"
@@ -226,25 +228,105 @@ class RAGChatbot:
             response = self.client.chat.completions.create(
                 model="gpt-5-mini",
                 messages=messages,
-                temperature=0.3,
-                max_tokens=1500
+                temperature=0.3
+                # ⚠️ max_tokens 제거 — Genspark 프록시 미지원
             )
             
             answer = response.choices[0].message.content
+
+            # ── GraphRAG: 답변+논문에서 엔티티 추출 → 서브그래프 반환 ──────────
+            graph_paths = self._extract_graph_paths(message, answer, retrieved_papers)
             
             return {
                 "answer": answer,
                 "sources": retrieved_papers,
-                "total_docs_indexed": self.collection.count()
+                "total_docs_indexed": self.collection.count(),
+                "graph_paths": graph_paths
             }
         
         except Exception as e:
             return {
                 "answer": f"오류가 발생했습니다: {str(e)}",
                 "sources": [],
-                "total_docs_indexed": self.collection.count()
+                "total_docs_indexed": self.collection.count(),
+                "graph_paths": {"nodes": [], "edges": [], "seed_ids": [], "paths": []}
             }
     
+    def _extract_graph_paths(self, question: str, answer: str, papers: list) -> dict:
+        """
+        GraphRAG 핵심 — 질문+답변+논문제목에서 엔티티 추출 → 서브그래프 반환
+        
+        추출 전략:
+        1. 논문 제목의 주요 단어 (파이토케미컬/건강조건 키워드)
+        2. 답변에서 파이토케미컬/질환 전문용어 패턴 추출
+        3. find_subgraph_for_entities() 호출
+        """
+        try:
+            # ── 엔티티 후보 수집 ─────────────────────────────────────────────
+            candidates = set()
+
+            # 1) 질문에서 직접 단어 추출 (3글자 이상 영문/한글 복합어)
+            question_words = re.findall(r'[A-Za-z][A-Za-z\-]{2,}', question)
+            candidates.update(w.lower() for w in question_words if len(w) >= 4)
+
+            # 2) 논문 제목에서 의미있는 명사구 추출
+            for paper in papers[:5]:
+                title = paper.get("title", "")
+                # 영문 명사구: 대문자 시작 단어 또는 연속 단어
+                title_words = re.findall(r'[A-Za-z][A-Za-z\-]{3,}', title)
+                candidates.update(w.lower() for w in title_words)
+
+            # 3) 답변에서 괄호 안 영문 전문용어 추출 (한국어 병기 패턴)
+            answer_terms = re.findall(r'[A-Za-z][A-Za-z\-\s]{2,}(?=\s*[\)\]】])', answer)
+            candidates.update(t.strip().lower() for t in answer_terms if len(t.strip()) >= 4)
+
+            # 4) 파이토케미컬/건강조건 전형 키워드 우선 추출
+            PHYTO_KEYWORDS = [
+                "curcumin", "quercetin", "resveratrol", "catechin", "epicatechin",
+                "anthocyanin", "lycopene", "kaempferol", "apigenin", "luteolin",
+                "sulforaphane", "allicin", "genistein", "daidzein", "berberine",
+                "ellagic acid", "chlorogenic acid", "ferulic acid", "caffeic acid",
+                "epigallocatechin", "egcg", "capsaicin", "naringenin", "hesperidin",
+                "piperine", "gingerol", "curcuminoid", "polyphenol", "flavonoid",
+                "isoflavone", "stilbene", "terpenoid", "carotenoid", "glucosinolate"
+            ]
+            HEALTH_KEYWORDS = [
+                "cancer", "diabetes", "inflammation", "obesity", "cardiovascular",
+                "hypertension", "alzheimer", "parkinson", "arthritis", "depression",
+                "anxiety", "oxidative stress", "metabolic", "insulin", "cholesterol",
+                "tumor", "apoptosis", "nf-kb", "antioxidant", "anti-inflammatory"
+            ]
+            combined_text = (question + " " + answer + " " +
+                             " ".join(p.get("title", "") for p in papers)).lower()
+            for kw in PHYTO_KEYWORDS + HEALTH_KEYWORDS:
+                if kw in combined_text:
+                    candidates.add(kw)
+
+            # ── 노이즈 제거 (불용어) ────────────────────────────────────────
+            STOPWORDS = {
+                "this", "that", "with", "from", "have", "been", "were", "also",
+                "these", "their", "which", "such", "more", "than", "after",
+                "through", "between", "against", "about", "into", "during",
+                "study", "paper", "result", "analysis", "effect", "effects",
+                "showed", "showed", "found", "using", "used", "based", "high",
+                "significant", "significantly", "increase", "decrease", "level",
+                "pmid", "journal", "abstract", "title", "author"
+            }
+            candidates = {c for c in candidates if c not in STOPWORDS and len(c) >= 4}
+
+            if not candidates:
+                return {"nodes": [], "edges": [], "seed_ids": [], "paths": []}
+
+            # ── 그래프 경로 탐색 ────────────────────────────────────────────
+            entity_list = sorted(candidates)[:20]  # 최대 20개 엔티티
+            print(f"[GraphRAG] 엔티티 추출: {entity_list[:10]}...")
+            subgraph = find_subgraph_for_entities(entity_list, max_hops=2)
+            return subgraph
+
+        except Exception as e:
+            print(f"[GraphRAG] 경로 추출 오류: {e}")
+            return {"nodes": [], "edges": [], "seed_ids": [], "paths": []}
+
     def get_collection_stats(self) -> dict:
         """벡터DB 통계"""
         try:

@@ -36,7 +36,8 @@ from pubmed_crawler import (
     PHYTOCHEMICAL_CATEGORIES, HEALTH_CONDITIONS, ABSTRACTS_DIR
 )
 from graph_builder import (
-    build_graph_from_papers, load_graph, search_graph, get_graph_stats, save_graph
+    build_graph_from_papers, load_graph, search_graph, get_graph_stats, save_graph,
+    find_subgraph_for_entities
 )
 from rag_chatbot import RAGChatbot
 
@@ -456,6 +457,17 @@ async def clear_graph():
     """그래프 초기화"""
     save_graph({"nodes": [], "edges": [], "stats": {}})
     return {"message": "그래프가 초기화되었습니다"}
+
+
+@app.get("/api/graph/path")
+async def get_graph_path(entities: str = Query(..., description="쉼표 구분 엔티티 이름 목록")):
+    """
+    GraphRAG 경로 탐색 — 엔티티 이름으로 연결 서브그래프 반환
+    예: /api/graph/path?entities=curcumin,inflammation,nf-kb
+    """
+    entity_list = [e.strip() for e in entities.split(",") if e.strip()]
+    result = find_subgraph_for_entities(entity_list, max_hops=2)
+    return result
 
 
 # ─── RAG 챗봇 ────────────────────────────────────────────────────────────────

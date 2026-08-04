@@ -367,3 +367,110 @@ def get_graph_stats() -> dict:
         "total_nodes": len(graph_data.get("nodes", [])),
         "total_edges": len(graph_data.get("edges", []))
     })
+
+
+def find_subgraph_for_entities(entity_names: list, max_hops: int = 2) -> dict:
+    """
+    GraphRAG 경로 탐색 — 엔티티 이름 목록으로 연결 서브그래프 반환
+    
+    흐름:
+    1. entity_names 부분 일치로 seed 노드 탐색
+    2. BFS max_hops 내 이웃 수집
+    3. seed 간 최단경로 엣지도 포함
+    4. {nodes, edges, seed_ids, paths} 반환
+    """
+    if not entity_names:
+        return {"nodes": [], "edges": [], "seed_ids": [], "paths": []}
+
+    graph_data = load_graph()
+    all_nodes = graph_data.get("nodes", [])
+    all_edges = graph_data.get("edges", [])
+
+    if not all_nodes:
+        return {"nodes": [], "edges": [], "seed_ids": [], "paths": []}
+
+    # ── 1. seed 노드 탐색 (소문자 부분 일치) ─────────────────────────────────
+    name_lower = [n.lower().strip() for n in entity_names if n]
+    seed_nodes = []
+    for node in all_nodes:
+        node_name = node.get("name", "").lower()
+        node_id   = node.get("id", "").lower()
+        if any(e in node_name or e in node_id for e in name_lower):
+            seed_nodes.append(node)
+
+    if not seed_nodes:
+        # 폴백: 단어 단위 토큰 포함 여부로 재탐색
+        tokens = set()
+        for e in name_lower:
+            tokens.update(e.split())
+        tokens = {t for t in tokens if len(t) > 3}  # 짧은 단어 제외
+        for node in all_nodes:
+            node_name = node.get("name", "").lower()
+            if any(t in node_name for t in tokens):
+                seed_nodes.append(node)
+
+    seed_ids = {n["id"] for n in seed_nodes}
+
+    # ── 2. NetworkX 그래프 구성 ───────────────────────────────────────────────
+    G = nx.DiGraph()
+    for node in all_nodes:
+        G.add_node(node["id"])
+    for edge in all_edges:
+        G.add_edge(edge["source"], edge["target"],
+                   type=edge.get("type", ""),
+                   label=edge.get("label", ""),
+                   evidence=edge.get("evidence", ""),
+                   weight=edge.get("weight", 1))
+
+    # ── 3. BFS로 max_hops 이내 이웃 수집 ─────────────────────────────────────
+    visited = set(seed_ids)
+    frontier = set(seed_ids)
+    for _ in range(max_hops):
+        next_frontier = set()
+        for nid in frontier:
+            if nid in G:
+                for neighbor in list(G.successors(nid)) + list(G.predecessors(nid)):
+                    if neighbor not in visited:
+                        next_frontier.add(neighbor)
+                        visited.add(neighbor)
+        frontier = next_frontier
+
+    subgraph_node_ids = visited
+
+    # ── 4. seed 간 최단경로 (undirected) 추가 ────────────────────────────────
+    path_edges: list = []
+    G_undirected = G.to_undirected()
+    seed_list = list(seed_ids)
+    paths_info = []
+    for i in range(len(seed_list)):
+        for j in range(i + 1, len(seed_list)):
+            s, t = seed_list[i], seed_list[j]
+            if s in G_undirected and t in G_undirected:
+                try:
+                    path = nx.shortest_path(G_undirected, s, t)
+                    if len(path) <= max_hops + 2:  # 너무 먼 경로 제외
+                        subgraph_node_ids.update(path)
+                        paths_info.append({
+                            "from": s,
+                            "to": t,
+                            "path": path,
+                            "length": len(path) - 1
+                        })
+                except nx.NetworkXNoPath:
+                    pass
+
+    # ── 5. 최종 노드/엣지 필터링 ─────────────────────────────────────────────
+    result_nodes = [n for n in all_nodes if n["id"] in subgraph_node_ids]
+    result_edges = [e for e in all_edges
+                    if e["source"] in subgraph_node_ids
+                    and e["target"] in subgraph_node_ids]
+
+    print(f"[GraphRAG] 엔티티={entity_names} → seed={len(seed_ids)}개, "
+          f"서브그래프={len(result_nodes)}노드/{len(result_edges)}엣지")
+
+    return {
+        "nodes": result_nodes,
+        "edges": result_edges,
+        "seed_ids": list(seed_ids),
+        "paths": paths_info
+    }

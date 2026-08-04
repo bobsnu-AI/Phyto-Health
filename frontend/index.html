@@ -297,6 +297,76 @@
 
     /* 그래프 구축 진행 */
     #graphBuildProgress { margin-bottom: 0.9rem; }
+
+    /* ── GraphRAG 경로 뷰 ── */
+    .graphrag-banner {
+      background: linear-gradient(135deg, #1a1060 0%, #0c1a3d 100%);
+      border: 1px solid #4f46e5;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 0.8rem;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+    }
+    .graphrag-banner.visible { display: flex; }
+    .graphrag-badge {
+      background: #4f46e5;
+      color: #e0e7ff;
+      border-radius: 6px;
+      padding: 3px 9px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .graphrag-info { color: #c7d2fe; flex: 1; }
+    .graphrag-exit {
+      background: transparent;
+      border: 1px solid #4f46e5;
+      color: #a5b4fc;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .graphrag-exit:hover { background: rgba(79,70,229,0.2); color: #e0e7ff; }
+
+    /* seed 노드 강조 (GraphRAG 경로 뷰) */
+    .node.seed-node circle {
+      stroke: #a78bfa !important;
+      stroke-width: 3px !important;
+      filter: drop-shadow(0 0 8px #7c3aed);
+    }
+
+    /* 챗봇 버블 내 경로 보기 버튼 */
+    .btn-graphrag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 9px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #e0e7ff;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-graphrag:hover { background: linear-gradient(135deg, #4338ca, #6d28d9); transform: translateY(-1px); }
+    .graphrag-path-info {
+      margin-top: 8px;
+      padding: 7px 10px;
+      background: rgba(79,70,229,0.1);
+      border: 1px solid rgba(79,70,229,0.25);
+      border-radius: 7px;
+      font-size: 0.73rem;
+      color: #a5b4fc;
+    }
   </style>
 </head>
 <body>
@@ -644,6 +714,13 @@
 
     <!-- ── 우측 그래프 메인 ── -->
     <div class="graph-main">
+
+      <!-- GraphRAG 경로 뷰 배너 -->
+      <div class="graphrag-banner" id="graphragBanner">
+        <span class="graphrag-badge">🧬 GraphRAG 경로</span>
+        <span class="graphrag-info" id="graphragInfo">AI 답변 기반 관련 경로 표시 중</span>
+        <button class="graphrag-exit" onclick="exitGraphragView()">✕ 전체 보기로</button>
+      </div>
 
       <!-- 툴바 -->
       <div class="graph-toolbar">
@@ -1691,6 +1768,10 @@ async function loadRagStats() {
     document.getElementById('ragGraphNodes').textContent = graphRes.data.total_nodes||0;
   } catch(e) {}
 }
+
+// GraphRAG 경로 데이터 전역 저장
+let lastGraphPaths = null;
+
 async function sendChat() {
   if (!requireApiKey()) return;
   const input = document.getElementById('chatInput');
@@ -1704,13 +1785,19 @@ async function sendChat() {
   try {
     const res = await axios.post(API+'/api/rag/chat', { message:msg, chat_history:chatHistory.slice(-6), openai_api_key:getApiKey() });
     removeThinking();
-    appendBotMessage(res.data.answer, res.data.sources);
+    const graphPaths = res.data.graph_paths || null;
+    appendBotMessage(res.data.answer, res.data.sources, graphPaths);
     chatHistory.push({ role:'assistant', content:res.data.answer });
+    // 마지막 경로 데이터 저장
+    if (graphPaths && graphPaths.nodes && graphPaths.nodes.length > 0) {
+      lastGraphPaths = graphPaths;
+    }
   } catch(e) {
     removeThinking();
     appendMessage('bot', '오류가 발생했습니다: '+(e.response?.data?.detail||e.message));
   } finally { document.getElementById('chatSendBtn').disabled = false; }
 }
+
 function appendMessage(role, content) {
   const c = document.getElementById('chat-messages');
   const d = document.createElement('div');
@@ -1718,11 +1805,16 @@ function appendMessage(role, content) {
   d.textContent = content;
   c.appendChild(d); c.scrollTop = c.scrollHeight;
 }
-function appendBotMessage(content, sources) {
+
+function appendBotMessage(content, sources, graphPaths) {
   const c = document.getElementById('chat-messages');
   const d = document.createElement('div');
   d.className = 'msg-bubble msg-bot';
+
+  // 마크다운 기본 렌더
   let html = content.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+
+  // 참고 논문
   let srcHtml = '';
   if (sources?.length) {
     srcHtml = `<div class="msg-sources">📚 참고 논문:<br>`+
@@ -1730,9 +1822,30 @@ function appendBotMessage(content, sources) {
         ${s.is_meta_analysis?'🔬':'📄'} ${(s.title||'').substring(0,55)}… (${s.year||''})
       </a>`).join('<br>') + '</div>';
   }
-  d.innerHTML = html + srcHtml;
+
+  // GraphRAG 경로 버튼 — 노드가 존재할 때만 표시
+  let pathHtml = '';
+  if (graphPaths && graphPaths.nodes && graphPaths.nodes.length > 0) {
+    const nodeCount = graphPaths.nodes.length;
+    const edgeCount = graphPaths.edges ? graphPaths.edges.length : 0;
+    const seedCount = graphPaths.seed_ids ? graphPaths.seed_ids.length : 0;
+    pathHtml = `
+      <div class="graphrag-path-info">
+        🧬 <strong>${nodeCount}개 노드 · ${edgeCount}개 연결</strong>이 이 답변과 관련된 그래프 경로에서 발견되었습니다
+        (${seedCount}개 핵심 엔티티 매칭)
+      </div>
+      <button class="btn-graphrag" onclick='viewGraphPath(${JSON.stringify(graphPaths).replace(/'/g,"&#39;")})'>
+        <i class="fas fa-project-diagram"></i> 지식 그래프에서 경로 보기
+      </button>`;
+  } else {
+    // 노드 없음 — 안내 메시지
+    pathHtml = `<div style="margin-top:8px;font-size:0.72rem;color:var(--text-muted)">💡 그래프 구축 후 경로 시각화가 활성화됩니다</div>`;
+  }
+
+  d.innerHTML = html + srcHtml + pathHtml;
   c.appendChild(d); c.scrollTop = c.scrollHeight;
 }
+
 function appendThinking() {
   const c = document.getElementById('chat-messages');
   const d = document.createElement('div');
@@ -1742,6 +1855,60 @@ function appendThinking() {
 }
 function removeThinking() { document.getElementById('thinkingBubble')?.remove(); }
 function setQuestion(q) { document.getElementById('chatInput').value = q.trim(); document.getElementById('chatInput').focus(); }
+
+// ════════════════════════════════════════
+//   GraphRAG 경로 시각화
+// ════════════════════════════════════════
+function viewGraphPath(pathData) {
+  if (!pathData || !pathData.nodes || pathData.nodes.length === 0) {
+    showToast('표시할 경로 데이터가 없습니다', 'error');
+    return;
+  }
+
+  // 그래프 탭으로 전환
+  const graphTabBtn = document.querySelector('.tab-btn[onclick*="graph"]');
+  if (graphTabBtn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-graph').classList.add('active');
+    graphTabBtn.classList.add('active');
+  }
+
+  // GraphRAG 배너 표시
+  const banner = document.getElementById('graphragBanner');
+  const info   = document.getElementById('graphragInfo');
+  banner.classList.add('visible');
+  info.textContent = `${pathData.nodes.length}개 노드 · ${(pathData.edges||[]).length}개 엣지 — AI 답변 관련 경로`;
+
+  // 경로 데이터 렌더
+  renderGraph(pathData);
+  updateGraphStats(pathData);
+
+  // seed 노드 시각적 강조 (약간 지연 — D3 렌더 후)
+  setTimeout(() => {
+    if (pathData.seed_ids && pathData.seed_ids.length > 0) {
+      const seedSet = new Set(pathData.seed_ids);
+      d3.selectAll('.node').each(function(d) {
+        if (seedSet.has(d.id)) {
+          d3.select(this).classed('seed-node', true);
+        }
+      });
+    }
+  }, 600);
+
+  showToast(`🧬 GraphRAG 경로: ${pathData.nodes.length}개 노드 표시 중`, 'info');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function exitGraphragView() {
+  // 배너 숨기기
+  document.getElementById('graphragBanner').classList.remove('visible');
+  // seed 강조 제거
+  d3.selectAll('.node').classed('seed-node', false);
+  // 원래 전체 그래프 복원
+  loadGraph();
+  showToast('전체 그래프 뷰로 전환됨', 'info');
+}
 
 // ════════════════════════════════════════
 //   유틸리티
