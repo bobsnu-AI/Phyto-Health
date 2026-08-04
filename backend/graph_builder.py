@@ -360,6 +360,78 @@ def search_graph(query: str) -> dict:
     }
 
 
+def subgraph_to_context_text(subgraph: dict, max_relations: int = 30) -> str:
+    """
+    GraphRAG 핵심 — 서브그래프를 GPT가 읽을 수 있는 관계 텍스트로 변환
+    
+    출력 예시:
+    === 지식 그래프 관계 (논문 기반 추출) ===
+    • curcumin  →[INHIBITS]→  nf-kb pathway
+      근거: "Curcumin inhibits NF-κB activation..." (논문 3편)
+    • curcumin  →[REDUCES]→  inflammation
+      근거: "Curcumin significantly reduced..." (논문 5편)
+    • nf-kb pathway  →[AFFECTS]→  chronic inflammation
+    ...
+    """
+    nodes = subgraph.get("nodes", [])
+    edges = subgraph.get("edges", [])
+    seed_ids = set(subgraph.get("seed_ids", []))
+
+    if not edges:
+        return ""
+
+    # 노드 ID → 이름 맵
+    id_to_name = {n["id"]: n["name"] for n in nodes}
+    id_to_type = {n["id"]: n["type"] for n in nodes}
+
+    # 관계 타입 한국어 레이블
+    REL_LABELS = {
+        "IMPROVES":        "개선",
+        "REDUCES":         "감소/억제",
+        "INHIBITS":        "억제",
+        "ACTIVATES":       "활성화",
+        "FOUND_IN":        "함유됨",
+        "AFFECTS":         "영향",
+        "PREVENTS":        "예방",
+        "INCREASES":       "증가",
+        "ASSOCIATED_WITH": "연관",
+        "BIOMARKER_OF":    "바이오마커",
+    }
+
+    # seed 노드 관련 엣지 우선 정렬 (관련성 높은 것 먼저)
+    def edge_priority(e):
+        src_is_seed = e["source"] in seed_ids
+        tgt_is_seed = e["target"] in seed_ids
+        weight = e.get("weight", 1)
+        return (-(src_is_seed + tgt_is_seed), -weight)
+
+    sorted_edges = sorted(edges, key=edge_priority)[:max_relations]
+
+    lines = ["=== 지식 그래프 관계 (논문 기반 추출) ==="]
+    for e in sorted_edges:
+        src_name = id_to_name.get(e["source"], e["source"])
+        tgt_name = id_to_name.get(e["target"], e["target"])
+        src_type = id_to_type.get(e["source"], "")
+        tgt_type = id_to_type.get(e["target"], "")
+        rel_type = e.get("type", "ASSOCIATED_WITH")
+        rel_kor  = REL_LABELS.get(rel_type, rel_type)
+        weight   = e.get("weight", 1)
+        evidence = e.get("evidence", "")
+
+        # 관계 라인
+        line = f"• [{src_type}] {src_name}  →[{rel_type}/{rel_kor}]→  [{tgt_type}] {tgt_name}"
+        if weight > 1:
+            line += f"  (논문 {weight}편에서 확인)"
+        lines.append(line)
+
+        # 근거 문장 (있는 경우만)
+        if evidence and len(evidence) > 10:
+            lines.append(f"  근거: \"{evidence[:120]}\"")
+
+    lines.append(f"\n총 {len(sorted_edges)}개 관계 / {len(nodes)}개 엔티티 노드")
+    return "\n".join(lines)
+
+
 def get_graph_stats() -> dict:
     """그래프 통계 반환"""
     graph_data = load_graph()

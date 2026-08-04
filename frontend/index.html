@@ -1758,34 +1758,35 @@ async function loadRagStats() {
   } catch(e) {}
 }
 
-// GraphRAG 경로 데이터 전역 저장
-let lastGraphPaths = null;
+  // GraphRAG 경로 데이터 전역 저장
+  let lastGraphPaths = null;
 
-async function sendChat() {
-  if (!requireApiKey()) return;
-  const input = document.getElementById('chatInput');
-  const msg = input.value.trim();
-  if (!msg) return;
-  input.value = '';
-  document.getElementById('chatSendBtn').disabled = true;
-  appendMessage('user', msg);
-  appendThinking();
-  chatHistory.push({ role:'user', content:msg });
-  try {
-    const res = await axios.post(API+'/api/rag/chat', { message:msg, chat_history:chatHistory.slice(-6), openai_api_key:getApiKey() });
-    removeThinking();
-    const graphPaths = res.data.graph_paths || null;
-    appendBotMessage(res.data.answer, res.data.sources, graphPaths);
-    chatHistory.push({ role:'assistant', content:res.data.answer });
-    // 마지막 경로 데이터 저장
-    if (graphPaths && graphPaths.nodes && graphPaths.nodes.length > 0) {
-      lastGraphPaths = graphPaths;
-    }
-  } catch(e) {
-    removeThinking();
-    appendMessage('bot', '오류가 발생했습니다: '+(e.response?.data?.detail||e.message));
-  } finally { document.getElementById('chatSendBtn').disabled = false; }
-}
+  async function sendChat() {
+    if (!requireApiKey()) return;
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    document.getElementById('chatSendBtn').disabled = true;
+    appendMessage('user', msg);
+    appendThinking();
+    chatHistory.push({ role:'user', content:msg });
+    try {
+      const res = await axios.post(API+'/api/rag/chat', { message:msg, chat_history:chatHistory.slice(-6), openai_api_key:getApiKey() });
+      removeThinking();
+      const graphPaths = res.data.graph_paths || null;
+      const graphUsed  = res.data.graph_used  || false;
+      const relCount   = res.data.graph_relations_count || 0;
+      appendBotMessage(res.data.answer, res.data.sources, graphPaths, graphUsed, relCount);
+      chatHistory.push({ role:'assistant', content:res.data.answer });
+      if (graphPaths && graphPaths.nodes && graphPaths.nodes.length > 0) {
+        lastGraphPaths = graphPaths;
+      }
+    } catch(e) {
+      removeThinking();
+      appendMessage('bot', '오류가 발생했습니다: '+(e.response?.data?.detail||e.message));
+    } finally { document.getElementById('chatSendBtn').disabled = false; }
+  }
 
 function appendMessage(role, content) {
   const c = document.getElementById('chat-messages');
@@ -1795,45 +1796,68 @@ function appendMessage(role, content) {
   c.appendChild(d); c.scrollTop = c.scrollHeight;
 }
 
-function appendBotMessage(content, sources, graphPaths) {
-  const c = document.getElementById('chat-messages');
-  const d = document.createElement('div');
-  d.className = 'msg-bubble msg-bot';
+  function appendBotMessage(content, sources, graphPaths, graphUsed, relCount) {
+    const c = document.getElementById('chat-messages');
+    const d = document.createElement('div');
+    d.className = 'msg-bubble msg-bot';
 
-  // 마크다운 기본 렌더
-  let html = content.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    // 마크다운 기본 렌더
+    let html = content.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
 
-  // 참고 논문
-  let srcHtml = '';
-  if (sources?.length) {
-    srcHtml = `<div class="msg-sources">📚 참고 논문:<br>`+
-      sources.map(s=>`<a href="${s.url}" target="_blank" class="source-link">
-        ${s.is_meta_analysis?'🔬':'📄'} ${(s.title||'').substring(0,55)}… (${s.year||''})
-      </a>`).join('<br>') + '</div>';
+    // GraphRAG 사용 배지 (답변 생성에 그래프가 실제 기여했는지 표시)
+    let ragBadge = '';
+    if (graphUsed && relCount > 0) {
+      ragBadge = `<div style="margin-bottom:8px">
+        <span style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#e0e7ff;
+          border-radius:6px;padding:3px 9px;font-size:0.7rem;font-weight:700">
+          🧬 GraphRAG
+        </span>
+        <span style="font-size:0.7rem;color:#a5b4fc;margin-left:6px">
+          지식 그래프 ${relCount}개 관계가 이 답변에 반영됨
+        </span>
+      </div>`;
+    } else {
+      ragBadge = `<div style="margin-bottom:8px">
+        <span style="background:#1e293b;color:#64748b;
+          border-radius:6px;padding:3px 9px;font-size:0.7rem;font-weight:700">
+          📄 벡터 RAG
+        </span>
+        <span style="font-size:0.7rem;color:#64748b;margin-left:6px">
+          그래프 구축 후 GraphRAG 활성화
+        </span>
+      </div>`;
+    }
+
+    // 참고 논문
+    let srcHtml = '';
+    if (sources?.length) {
+      srcHtml = `<div class="msg-sources">📚 참고 논문:<br>`+
+        sources.map(s=>`<a href="${s.url}" target="_blank" class="source-link">
+          ${s.is_meta_analysis?'🔬':'📄'} ${(s.title||'').substring(0,55)}… (${s.year||''})
+        </a>`).join('<br>') + '</div>';
+    }
+
+    // GraphRAG 경로 버튼
+    let pathHtml = '';
+    if (graphPaths && graphPaths.nodes && graphPaths.nodes.length > 0) {
+      const nodeCount = graphPaths.nodes.length;
+      const edgeCount = graphPaths.edges ? graphPaths.edges.length : 0;
+      const seedCount = graphPaths.seed_ids ? graphPaths.seed_ids.length : 0;
+      pathHtml = `
+        <div class="graphrag-path-info">
+          🧬 <strong>${nodeCount}개 노드 · ${edgeCount}개 연결</strong>이 이 답변과 관련된 그래프 경로에서 발견되었습니다
+          (${seedCount}개 핵심 엔티티 매칭)
+        </div>
+        <button class="btn-graphrag" onclick='viewGraphPath(${JSON.stringify(graphPaths).replace(/'/g,"&#39;")})'>
+          <i class="fas fa-project-diagram"></i> 지식 그래프에서 경로 보기
+        </button>`;
+    } else {
+      pathHtml = `<div style="margin-top:8px;font-size:0.72rem;color:var(--text-muted)">💡 그래프 구축 후 경로 시각화가 활성화됩니다</div>`;
+    }
+
+    d.innerHTML = ragBadge + html + srcHtml + pathHtml;
+    c.appendChild(d); c.scrollTop = c.scrollHeight;
   }
-
-  // GraphRAG 경로 버튼 — 노드가 존재할 때만 표시
-  let pathHtml = '';
-  if (graphPaths && graphPaths.nodes && graphPaths.nodes.length > 0) {
-    const nodeCount = graphPaths.nodes.length;
-    const edgeCount = graphPaths.edges ? graphPaths.edges.length : 0;
-    const seedCount = graphPaths.seed_ids ? graphPaths.seed_ids.length : 0;
-    pathHtml = `
-      <div class="graphrag-path-info">
-        🧬 <strong>${nodeCount}개 노드 · ${edgeCount}개 연결</strong>이 이 답변과 관련된 그래프 경로에서 발견되었습니다
-        (${seedCount}개 핵심 엔티티 매칭)
-      </div>
-      <button class="btn-graphrag" onclick='viewGraphPath(${JSON.stringify(graphPaths).replace(/'/g,"&#39;")})'>
-        <i class="fas fa-project-diagram"></i> 지식 그래프에서 경로 보기
-      </button>`;
-  } else {
-    // 노드 없음 — 안내 메시지
-    pathHtml = `<div style="margin-top:8px;font-size:0.72rem;color:var(--text-muted)">💡 그래프 구축 후 경로 시각화가 활성화됩니다</div>`;
-  }
-
-  d.innerHTML = html + srcHtml + pathHtml;
-  c.appendChild(d); c.scrollTop = c.scrollHeight;
-}
 
 function appendThinking() {
   const c = document.getElementById('chat-messages');

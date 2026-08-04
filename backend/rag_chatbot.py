@@ -12,7 +12,7 @@ from typing import Optional
 import chromadb
 from chromadb.config import Settings
 from openai import OpenAI
-from graph_builder import find_subgraph_for_entities
+from graph_builder import find_subgraph_for_entities, subgraph_to_context_text
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 CHROMA_DIR = DATA_DIR / "chroma_db"
@@ -187,17 +187,46 @@ class RAGChatbot:
             return []
     
     def chat(self, message: str, chat_history: list = None) -> dict:
-        """RAG 기반 Q&A 응답 생성"""
+        """
+        진짜 GraphRAG Q&A — 벡터 검색 + 지식 그래프 관계를 함께 GPT에 전달
+        
+        흐름:
+        1. 질문에서 엔티티 키워드 추출 (사전 기반)
+        2. ChromaDB 벡터 검색 → 관련 논문 5편
+        3. 지식 그래프에서 엔티티 관련 서브그래프 탐색 (GPT 호출 전!)
+        4. [논문 컨텍스트 + 그래프 관계] 를 GPT에 함께 전달
+        5. GPT가 두 소스를 모두 보고 답변 생성
+        """
         if chat_history is None:
             chat_history = []
-        
-        # 관련 논문 검색
+
+        # ── ① 질문에서 엔티티 키워드 추출 (GPT 호출 전) ──────────────────────
+        query_entities = self._extract_entities_from_query(message)
+        print(f"[GraphRAG] 질문 엔티티: {query_entities}")
+
+        # ── ② ChromaDB 벡터 검색 ──────────────────────────────────────────────
         retrieved_papers = self.retrieve(message, n_results=5)
-        
-        # 컨텍스트 구성
+
+        # 논문 제목에서도 추가 엔티티 보강
+        for paper in retrieved_papers[:3]:
+            title_entities = self._extract_entities_from_query(paper.get("title", ""))
+            query_entities = list(set(query_entities + title_entities))[:25]
+
+        # ── ③ 지식 그래프 선제 조회 (GPT 호출 전!) ───────────────────────────
+        graph_subgraph = {"nodes": [], "edges": [], "seed_ids": [], "paths": []}
+        graph_context_text = ""
+        if query_entities:
+            graph_subgraph = find_subgraph_for_entities(query_entities, max_hops=2)
+            if graph_subgraph.get("edges"):
+                graph_context_text = subgraph_to_context_text(graph_subgraph, max_relations=25)
+                print(f"[GraphRAG] 그래프 컨텍스트: {len(graph_subgraph['edges'])}개 관계 추출")
+
+        # ── ④ 컨텍스트 구성 (논문 + 그래프 관계 통합) ────────────────────────
         context_parts = []
+
+        # 4-A: 논문 컨텍스트
         if retrieved_papers:
-            context_parts.append("=== 관련 논문 ===")
+            context_parts.append("=== 관련 논문 (벡터 유사도 검색) ===")
             for i, paper in enumerate(retrieved_papers, 1):
                 meta_label = "🔬 [메타분석]" if paper['is_meta_analysis'] else "📄"
                 context_parts.append(
@@ -205,52 +234,142 @@ class RAGChatbot:
                     f"   저널: {paper['journal']} ({paper['year']}) | PMID: {paper['pmid']}\n"
                     f"   내용: {paper['snippet'][:300]}..."
                 )
-        
-        context = "\n".join(context_parts) if context_parts else "관련 논문을 찾을 수 없습니다."
-        
-        # 메시지 구성
+
+        # 4-B: 그래프 관계 컨텍스트 (핵심 추가!)
+        if graph_context_text:
+            context_parts.append("\n" + graph_context_text)
+
+        context = "\n".join(context_parts) if context_parts else "관련 논문 및 그래프 데이터를 찾을 수 없습니다."
+
+        # ── ⑤ GPT 메시지 구성 ─────────────────────────────────────────────────
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        
-        # 이전 대화 기록 추가
-        for hist in chat_history[-4:]:  # 최근 4개만
+
+        for hist in chat_history[-4:]:
             messages.append({"role": hist["role"], "content": hist["content"]})
-        
-        # 현재 질문 + 컨텍스트
-        user_message = f"""질문: {message}
+
+        # 그래프 정보 유무에 따라 프롬프트 차별화
+        if graph_context_text:
+            user_message = f"""질문: {message}
+
+{context}
+
+위 정보를 참고하여 답변해주세요:
+1. 지식 그래프의 관계 경로(→)를 활용해 메커니즘을 설명하세요
+2. 논문 근거와 그래프 관계를 연결하여 설명하세요
+3. 답변 마지막에 인용한 논문의 PMID를 명시해주세요"""
+        else:
+            user_message = f"""질문: {message}
 
 {context}
 
 위 논문들을 참고하여 답변해주세요. 답변 마지막에 인용한 논문의 PMID를 명시해주세요."""
-        
+
         messages.append({"role": "user", "content": user_message})
-        
+
+        # ── ⑥ GPT 호출 ───────────────────────────────────────────────────────
         try:
             response = self.client.chat.completions.create(
                 model="gpt-5-mini",
                 messages=messages,
                 temperature=0.3
-                # ⚠️ max_tokens 제거 — Genspark 프록시 미지원
             )
-            
+
             answer = response.choices[0].message.content
 
-            # ── GraphRAG: 답변+논문에서 엔티티 추출 → 서브그래프 반환 ──────────
-            graph_paths = self._extract_graph_paths(message, answer, retrieved_papers)
-            
+            # 답변 후 그래프 경로 보강 (답변 텍스트로 추가 엔티티 보강)
+            if not graph_subgraph.get("edges"):
+                graph_subgraph = self._extract_graph_paths(message, answer, retrieved_papers)
+
             return {
                 "answer": answer,
                 "sources": retrieved_papers,
                 "total_docs_indexed": self.collection.count(),
-                "graph_paths": graph_paths
+                "graph_paths": graph_subgraph,
+                "graph_used": bool(graph_context_text),          # 그래프가 답변에 실제 사용됐는지
+                "graph_relations_count": len(graph_subgraph.get("edges", []))
             }
-        
+
         except Exception as e:
             return {
                 "answer": f"오류가 발생했습니다: {str(e)}",
                 "sources": [],
                 "total_docs_indexed": self.collection.count(),
-                "graph_paths": {"nodes": [], "edges": [], "seed_ids": [], "paths": []}
+                "graph_paths": {"nodes": [], "edges": [], "seed_ids": [], "paths": []},
+                "graph_used": False,
+                "graph_relations_count": 0
             }
+
+    def _extract_entities_from_query(self, text: str) -> list:
+        """
+        질문/제목 텍스트에서 파이토케미컬·건강조건 엔티티 키워드 추출
+        GPT 호출 없이 사전(dictionary) 기반으로 빠르게 처리
+        """
+        PHYTO_KEYWORDS = [
+            "curcumin", "quercetin", "resveratrol", "catechin", "epicatechin",
+            "anthocyanin", "lycopene", "kaempferol", "apigenin", "luteolin",
+            "sulforaphane", "allicin", "genistein", "daidzein", "berberine",
+            "ellagic acid", "chlorogenic acid", "ferulic acid", "caffeic acid",
+            "epigallocatechin", "egcg", "capsaicin", "naringenin", "hesperidin",
+            "piperine", "gingerol", "curcuminoid", "polyphenol", "flavonoid",
+            "isoflavone", "stilbene", "terpenoid", "carotenoid", "glucosinolate",
+            "beta-carotene", "zeaxanthin", "lutein", "pterostilbene", "fisetin",
+            "spermidine", "urolithin", "indole", "terpene", "saponin",
+        ]
+        HEALTH_KEYWORDS = [
+            "cancer", "diabetes", "inflammation", "obesity", "cardiovascular",
+            "hypertension", "alzheimer", "parkinson", "arthritis", "depression",
+            "anxiety", "oxidative stress", "metabolic", "insulin", "cholesterol",
+            "tumor", "apoptosis", "nf-kb", "antioxidant", "anti-inflammatory",
+            "gut microbiome", "microbiota", "autophagy", "senescence", "aging",
+            "liver", "kidney", "brain", "heart", "lung", "colon", "breast",
+            "nrf2", "sirt1", "ampk", "mtor", "mapk", "vegf", "il-6", "tnf",
+            "reactive oxygen", "mitochondria", "endothelial", "adipose",
+        ]
+        # 한국어 → 영어 간단 매핑
+        KO_MAP = {
+            "커큐민": "curcumin", "케르세틴": "quercetin", "레스베라트롤": "resveratrol",
+            "안토시아닌": "anthocyanin", "설포라판": "sulforaphane", "베르베린": "berberine",
+            "염증": "inflammation", "당뇨": "diabetes", "암": "cancer",
+            "심혈관": "cardiovascular", "고혈압": "hypertension", "항산화": "antioxidant",
+            "비만": "obesity", "알츠하이머": "alzheimer", "파킨슨": "parkinson",
+            "장내미생물": "gut microbiome", "자가포식": "autophagy", "노화": "aging",
+        }
+
+        text_lower = text.lower()
+        found = []
+
+        # 영어 키워드 매칭
+        for kw in PHYTO_KEYWORDS + HEALTH_KEYWORDS:
+            if kw in text_lower:
+                found.append(kw)
+
+        # 한국어 → 영어 변환
+        for ko, en in KO_MAP.items():
+            if ko in text:
+                found.append(en)
+
+        # 영문 단어 추출 (4글자 이상, 불용어 제외)
+        STOPWORDS = {
+            "this", "that", "with", "from", "have", "been", "were", "also",
+            "these", "their", "which", "such", "more", "than", "after",
+            "study", "paper", "result", "effect", "effects", "showed",
+            "found", "using", "used", "based", "high", "significant",
+            "increase", "decrease", "level", "role", "type", "line",
+        }
+        words = re.findall(r'[A-Za-z][A-Za-z\-]{3,}', text)
+        for w in words:
+            wl = w.lower()
+            if wl not in STOPWORDS and len(wl) >= 4:
+                found.append(wl)
+
+        # 중복 제거 + 최대 20개
+        seen = set()
+        result = []
+        for f in found:
+            if f not in seen:
+                seen.add(f)
+                result.append(f)
+        return result[:20]
     
     def _extract_graph_paths(self, question: str, answer: str, papers: list) -> dict:
         """
