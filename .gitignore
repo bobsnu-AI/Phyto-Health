@@ -2,9 +2,14 @@ __pycache__/
 *.pyc
 *.pyo
 .env
-data/abstracts/
-data/chroma_db/
-data/graph/
+# data 하위 파일은 제외하되 .gitkeep으로 디렉토리 구조 유지
+data/abstracts/*
+!data/abstracts/.gitkeep
+data/chroma_db/*
+!data/chroma_db/.gitkeep
+data/graph/*
+!data/graph/.gitkeep
+data/papers_metadata.csv
 logs/
 *.log
 .wrangler/
