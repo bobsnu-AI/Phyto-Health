@@ -15,7 +15,9 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-DATA_DIR = Path(__file__).parent.parent / "data"
+# DATA_DIR: 환경변수 DATA_DIR → Railway Volume(/data) → 앱 내부 data/ 순으로 우선 사용
+_env_data = os.environ.get("DATA_DIR", "")
+DATA_DIR = Path(_env_data) if _env_data else Path(__file__).parent.parent / "data"
 ABSTRACTS_DIR = DATA_DIR / "abstracts"
 ABSTRACTS_DIR.mkdir(parents=True, exist_ok=True)
 

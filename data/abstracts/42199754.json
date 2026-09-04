@@ -1,0 +1,16 @@
+{
+  "pmid": "42199754",
+  "title": "Effects of Zingiberaceae-derived interventions on memory-related and other cognitive outcomes in adults: a systematic review and meta-analysis",
+  "abstract": "IntroductionCognitive impairment and age-related cognitive decline are major public health concerns, and nutraceutical strategies targeting modifiable biological pathways have attracted growing interest. Compounds derived from the Zingiberaceae family, including curcumin, turmeric, ginger, and related preparations, have been investigated for their potential neuroprotective effects, but their clinical impact on specific cognitive domains remains unclear. This systematic review and meta-analysis aimed to evaluate the effects of Zingiberaceae-derived interventions on memory-related and other cognitive outcomes in adults.MethodsA systematic search was conducted in MEDLINE, Cochrane Central Register of Controlled Trials, Web of Science, and Scopus from inception to March 2026. Randomized controlled trials evaluating orally administered Zingiberaceae-derived interventions in adults and reporting validated cognitive outcomes were included. Cognitive outcomes were grouped into memory-related outcomes, executive function and processing speed, global cognition, and attention or inhibitory control, with memory-related outcomes prespecified as the primary outcome.ResultsEighteen randomized, double-blind, placebo-controlled clinical trials were included in the qualitative synthesis, and domain-specific meta-analyses were performed when at least three studies were available. In the pooled analysis, Zingiberaceae-derived interventions showed a statistically significant improvement in memory-related outcomes (standardized mean difference = 0.57; 95% confidence interval: 0.13 to 1.02), whereas no significant pooled effects were observed for executive function and processing speed, global cognition, or attention or inhibitory control. Sensitivity analyses were consistent with the main findings.DiscussionOverall, Zingiberaceae-derived interventions may improve memory-related outcomes, but the evidence is very uncertain due to substantial heterogeneity, the small number of studies, risk of bias in some trials, and variability in populations, formulations, and outcome measures. These findings indicate that their cognitive effects may be domain-specific and context-dependent, highlighting the need for larger, well-designed trials using standardized cognitive endpoints and bioavailable formulations.Systematic review registrationhttps://www.crd.york.ac.uk/PROSPERO/view/CRD420261325966, identifier CRD420261325966.",
+  "journal": "Front Nutr",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.3389/fnut.2026.1834167",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/42199754/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T18:50:16.107780",
+  "source": "europepmc"
+}

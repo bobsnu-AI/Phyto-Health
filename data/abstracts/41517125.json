@@ -1,0 +1,16 @@
+{
+  "pmid": "41517125",
+  "title": "Clinical Potential of &lt;i&gt;Curcuma longa&lt;/i&gt; Linn. as Nutraceutical/Dietary Supplement for Metabolic Syndrome: Systematic Review and Meta-Analysis of Randomized Controlled Trials",
+  "abstract": "Metabolic syndrome (MetS) and its associated conditions, namely, type 2 diabetes mellitus (T2DM), non-alcoholic fatty liver disease (NAFLD), obesity, and polycystic ovary syndrome (PCOS) are characterized by insulin resistance, dyslipidemia, and low-grade inflammation. Curcumin, a polyphenolic compound derived from Curcuma longa Linn., exhibits pleiotropic metabolic and anti-inflammatory properties and has thus been evaluated as a nutraceutical intervention for these conditions, but findings remain inconsistent. This systematic review and meta-analysis evaluated the clinical efficacy of Curcuma longa supplementation on anthropometric, glycemic, lipid, inflammatory, and oxidative stress parameters in adults with MetS or related disorders. A comprehensive search of databases (PubMed, Scopus, AMED, LILACS, and Google Scholar) identified 104 eligible randomized controlled trials (RCTs). The included trials primarily assessed standardized oral turmeric/curcumin supplements and bioavailability-enhanced formulations rather than whole culinary turmeric. Pooled standardized mean differences (SMDs) with 95% confidence intervals (CIs) were computed using random-effects models. Subgroup analyses were conducted by disease category, dose, and formulation. Risk of bias was assessed using the Cochrane RoB 2 tool. Curcumin supplementation significantly reduced fasting blood sugar (SMD = -0.54, 95% CI -0.72 to -0.36) and HbA1c (SMD = -0.41, 95% CI -0.60 to -0.23) in T2DM; decreased triglycerides (SMD = -0.48; 95% CI: -0.70 to -0.25), and LDL cholesterol (SMD = -0.39; 95% CI: -0.59 to -0.18) while elevating HDL cholesterol (SMD = 0.45; 95% CI: 0.25 to 0.65) and total antioxidant capacity (SMD = 0.73; 95% CI: 0.51 to 0.94). Curcuma longa also attenuated systemic inflammation, lowering C-reactive protein (SMD = -0.62; 95% CI: -0.81 to -0.43), TNF-α (SMD = -0.57; 95% CI: -0.80 to -0.34), and IL-6 (SMD = -0.50; 95% CI: -0.70 to -0.29). Heterogeneity was moderate-to-high, reflecting some differences in the formulation, dosage, and duration. Collectively, these findings affirm that Curcuma longa exerts measurable, clinically relevant improvements on glycemic regulation, lipid metabolism, and inflammatory-oxidative balance, supporting its role as a nutraceutical adjunct in metabolic health management, while its bioavailability-enhanced formulations show superior efficacy. Larger, long-term, multicenter RCTs are warranted to confirm durability, optimal dosing, and safety.",
+  "journal": "Foods",
+  "year": "2025",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.3390/foods15010060",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/41517125/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T18:50:16.107840",
+  "source": "europepmc"
+}

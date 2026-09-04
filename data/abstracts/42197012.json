@@ -1,0 +1,16 @@
+{
+  "pmid": "42197012",
+  "title": "Dietary Antioxidants and Redox Signaling in Cancer Prevention: Mechanistic Insights and Metabolic Inflammation",
+  "abstract": "Oxidative stress is an important component of cancer biology and is characterized by an imbalance between the production of reactive oxygen species (ROS) and antioxidant defense systems. Excess ROS can cause molecular damage and genomic instability; at the same time, ROS signaling remains necessary for normal cellular function. Redox homeostasis is of particular importance in this balance. The aim of this structured narrative review was to summarize and critically discuss current evidence on how dietary antioxidants influence redox-sensitive pathways involved in cancer prevention, with particular attention to metabolic inflammation, mitochondrial quality control, and gut microbiota-related mechanisms. We performed a structured literature search of Scopus, Web of Science, and PubMed, focusing on articles published between 2021 and 2026. The evidence covered major redox-sensitive pathways, including Nrf2-Keap1-ARE signaling, AMPK-mTOR regulation, NF-κB-mediated inflammation, mitochondrial quality control (autophagy and mitophagy), and inflammasome activation. These pathways, which are involved in tumor initiation and progression, link oxidative stress to metabolic and inflammatory processes. Current evidence suggests that dietary antioxidants act primarily by supporting endogenous defense systems. This may help explain the \"antioxidant paradox\", in which antioxidant-rich dietary patterns are associated with a lower risk of cancer. In some studies, high-dose supplementation with isolated antioxidants has produced inconsistent or sometimes adverse results. These effects depend on dose, chemical form, metabolic context, and baseline redox state. The gut microbiota is also an important mediator of antioxidant bioactivity; by converting dietary polyphenols into bioactive metabolites, it can influence systemic redox balance and metabolic signaling. This microbiota-dependent modulation may partially explain inter-individual variability in responses to dietary interventions. In conclusion, dietary antioxidants should be considered as modulators of redox-sensitive signaling networks, not merely as simple radical scavengers. Personalized modulation of redox homeostasis is a future strategy for cancer prevention, with a greater emphasis on whole-diet and biomarker-guided approaches.",
+  "journal": "Nutrients",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.3390/nu18101552",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/42197012/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T12:34:35.592463",
+  "source": "europepmc"
+}

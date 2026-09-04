@@ -1,0 +1,16 @@
+{
+  "pmid": "41533751",
+  "title": "Effects of Food Bioactive Compounds on Oxidative Stress and the Antioxidant Defense System in Type 2 Diabetes: A Systematic Review and Meta-Analysis of Randomized Controlled Trials",
+  "abstract": "ContextType 2 diabetes mellitus (T2DM) is a global health problem characterized by chronic hyperglycemia, which disrupts the antioxidant defense system and increases reactive oxygen species (ROS). These changes contribute to the progression and complications of diabetes. As a result, therapies targeting redox balance, especially by enhancing endogenous antioxidant defenses, are being explored to prevent or reduce diabetic complications.ObjectiveThe present study aimed to systematically review the effects of bioactive food compounds on oxidative stress and the antioxidant defense systems in patients with T2DM.Data sourcesA comprehensive literature search was performed across multiple databases, including Medline, Embase, Web of Science, Scopus, and Cochrane CENTRAL.Data extractionThe literature search included documents published from inception up to April 22, 2025, following the Preferred Reporting Items for Systematic Reviews and Meta-Analyses (PRISMA) guidelines. Only randomized controlled trials (RCTs) that evaluated the effects of food bioactive compounds on the outcomes of interest were included. Meta-analyses were performed using R. The standardized mean difference (SMD) and corresponding 95% CI were used to represent the pooled effects.Data analysisWe included 109 human RCTs. Our meta-analysis demonstrated that both alpha-lipoic acid (ALA) and vitamin D led to significant reductions in glycosylated hemoglobin (HbA1c) levels. Additionally, the analysis indicated that curcumin and vitamin D significantly decreased malondialdehyde (MDA) levels. Amino acids like N-acetylcysteine, L-citrulline, and an amino sulfonic acid derivative (2-aminoethanesulfonic acid [taurine]), enhanced antioxidant defenses and improved glycemic control. Supplementation with zinc, selenium, and chromium was linked to better glycemic control and antioxidant status, including lower HbA1c and MDA, and higher total antioxidant capacity (TAC), glutathione (GSH), and antioxidant enzyme activity.ConclusionSupplementation with food bioactive compounds such as vitamin E, vitamin D, curcumin, and ALA may help to regulate HbA1c levels and enhance antioxidant defenses in patients with T2DM, indicating significant clinical potential for diabetes management. However, further research is needed to confirm their clinical efficacy and to determine optimal dosing strategies.Systematic review registrationPROSPERO registration No. CRD42024592055.",
+  "journal": "Nutr Rev",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.1093/nutrit/nuaf292",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/41533751/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T18:50:16.107795",
+  "source": "europepmc"
+}

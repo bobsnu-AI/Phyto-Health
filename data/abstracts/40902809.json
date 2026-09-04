@@ -1,0 +1,16 @@
+{
+  "pmid": "40902809",
+  "title": "Effectiveness and mechanisms of curcumin for colorectal cancer in preclinical models:A systematic review and meta-analysis",
+  "abstract": "Ethnopharmacological relevanceIn traditional Chinese medicine (TCM), Curcuma longa L. has been used since ancient times to treat chest and abdominal distending pain caused by cold coagulation, qi stagnation, and blood stasis, as well as cold-bi syndrome shoulder-arm pain. Colorectal cancer (CRC) falls under the categories of \"Jiju\" (Mass Accumulation) in TCM. The core pathogenesis involves spleen deficiency, dampness-toxin accumulation, and blood stasis, which are closely related to qi circulation stagnation, blood stasis, and phlegm coagulation. Curcuma longa L. is pungent and warm in nature, with the effects of \"breaking blood to eliminate masses and promoting qi to resolve stagnation\". Curcumin, a polyphenolic compound, is the main pharmacological component extracted from the rhizomes of Curcuma longa L. Modern pharmacological studies have found that curcumin exhibits multiple pharmacological activities, including anti-inflammatory, anti-tumor, anti-angiogenic, anti-metastatic, and anti-multidrug resistance effects.Aim of the studyThis study aimed to evaluate the efficacy of curcumin in animal models of colorectal cancer and explore its mechanism of action.Materials and methodsDatabases including Embase, Web of Science, PubMed, China National Knowledge Infrastructure, and Wanfang Database were searched from their inception to March 2025. The primary outcomes were reduction in tumor volume and weight, with subgroup analyses additionally conducted.ResultsThe analysis included 22 studies involving 536 animals. The results of the studies showed that Curcumin administration resulted in a significant reduction in tumor volume and a decrease in tumor weight relative to controls. In addition, the combination of Curcumin and chemotherapeutic agents had a synergistic effect, significantly reduced the volume and weight of CRC tumors relative to chemotherapeutic agents alone. Subgroup analyses showed that the efficacy of the oral route of Curcumin administration was superior to that of other routes of administration. Dose-response analysis suggested that the optimal dose range of Curcumin was 25-50 mg/kg/day and the duration of intervention was 14-21 days.ConclusionCurcumin can significantly inhibit the growth of CRC, attributed to its various anticancer properties such as modulation of intestinal microbes, alleviation of intestinal inflammation, inhibition of tumor cell proliferation, promotion of apoptosis, inhibition of metastasis, and sensitization to chemotherapy. However, clinical trials are still needed to evaluate the efficacy of Curcumin in humans.",
+  "journal": "J Ethnopharmacol",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.1016/j.jep.2025.120511",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/40902809/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T12:34:13.901453",
+  "source": "europepmc"
+}

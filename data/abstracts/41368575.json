@@ -1,0 +1,16 @@
+{
+  "pmid": "41368575",
+  "title": "The therapeutic effect of curcumin in metabolic dysfunction-associated steatotic liver disease: a systematic review and meta-analysis of animal studies",
+  "abstract": "BackgroundThe global prevalence of metabolic dysfunction-associated steatotic liver disease (MASLD) is rising sharply, driven by modern lifestyle and dietary changes. As MASLD threatens public health, exploring effective treatments is urgent. Curcumin may benefit MASLD by reducing inflammation and oxidative stress, but evidence reliability remains unclear. This systematic review and meta-analysis aims to evaluate curcumin's effects in MASLD via animal studies.MethodsRelevant animal studies were searched in PubMed, Web of Science, Embase, China National Knowledge Infrastructure (CNKI), and Wanfang Database. Two researchers screened literature and extracted data; discrepancies were resolved via consultation. The SYstematic Review Center for Laboratory animal Experimentation (SYRCLE) risk of bias assessment tool was used to assess methodological quality. Meta-analysis followed the Cochrane Handbook, with analyses via RevMan 5.4 and STATA 15. The study was registered on PROSPERO (CRD42024553149).ResultsA total of 22 studies were included, involving 430 animals. Compared with the control group, curcumin significantly reduced alanine aminotransferase (ALT), aspartate aminotransferase (AST), total cholesterol (TC), triglycerides (TG), low-density lipoprotein cholesterol (LDL) (alleviated dyslipidemia), NAFLD Activity Score (NAS), body weight, liver weight, liver index and inflammatory cytokines (tumor necrosis factor-α (TNF-α), interleukin-1 (IL-1), and interleukin-6 (IL-6)). It also increased high-density lipoprotein cholesterol (HDL). High heterogeneity was observed for ALT, AST, TC, TG, and HDL. Subgroup analyses showed HDL or LDL heterogeneity was likely associated with curcumin dose. For ALT, AST and LDL, duration might serve as a key regulatory factor contributing to their heterogeneity.ConclusionCurcumin protected the liver from MASLD via anti-inflammatory, antioxidant, lipid metabolism-regulating, and insulin sensitivity-improving effects, thereby emerging as a therapeutic option for this condition. Limitations include low methodological quality of included studies and potential publication bias. Future research should use rigorous designs, large samples, and long-term studies to confirm efficacy/safety and clarify mechanisms.",
+  "journal": "Front Pharmacol",
+  "year": "2025",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.3389/fphar.2025.1714245",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/41368575/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T12:34:13.901356",
+  "source": "europepmc"
+}

@@ -1,0 +1,16 @@
+{
+  "pmid": "41677730",
+  "title": "Anti-Leukemic Properties of Curcumin on Acute Lymphoblastic Leukemia: A Systematic Review",
+  "abstract": "BackgroundAcute lymphoblastic leukemia (ALL) is a hematological malignancy characterised by uncontrolled proliferation of lymphoid cells. Despite improved outcomes with modern chemotherapy, treatment resistance and adverse effects remain major clinical challenges. Curcumin, a natural compound from Curcuma longa, has shown anticancer potential in multiple malignancies, including leukemia. This systematic review aims to summarise preclinical and clinical evidence on the anti-leukemic effects and mechanisms of action of curcumin in ALL.MethodsA literature search was conducted in August 2025 across PubMed, Scopus, Ovid MEDLINE, and Web of Science according to Preferred Reporting Items for Systematic Reviews and Meta-Analyses 2020 guidelines. Primary research involving in vitro, in vivo, and human studies examining curcumin's anti-leukemic effects on ALL were included. Of the 2034 records screened, 26 articles met the inclusion and exclusion criteria.ResultsCurcumin inhibited proliferation and induced cytotoxicity and apoptosis in ALL cells via reactive oxygen species generation, DNA damage, mitochondrial dysfunction, and caspase activation. It also inhibited the Janus kinase/signal transducer and activator of transcription (JAK/STAT) and phosphoinositol-3 kinase/protein kinase B (PI3K/AKT) signalling, downregulated breakpoint cluster region-Abelson (BCR-ABL), Wilms tumor 1 (WT1), and Multidrug resistance 1 (MDR1) mRNAs, and induced ceramide accumulation and autophagy. In vivo evidence was limited, and no human studies were identified.ConclusionsCurcumin exerts multi-targeted anti-leukemic effects in ALL. Clinical translation is constrained by its poor bioavailability and limited clinical data. Future research should focus on improving the bioavailability of curcumin via chemical or pharmaceutical modification, as well as conducting well-designed clinical trials.",
+  "journal": "Biology (Basel)",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.3390/biology15030258",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/41677730/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T12:34:35.592238",
+  "source": "europepmc"
+}

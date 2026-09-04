@@ -1,0 +1,16 @@
+{
+  "pmid": "41878123",
+  "title": "Nanoformulated Phytochemicals Against Pancreatic Cancer: Emerging Advances in Therapeutic Strategies",
+  "abstract": "BackgroundPancreatic cancer (PC) is an aggressive malignancy that has become one of the leading causes of cancer-related death worldwide. Remarkably, phytochemical-based nanoformulations have demonstrated great potential in combating cancer progression. Therefore, the objective of this scoping review is to analyze the most recent advances in the application of nanoformulated phytochemicals against PC.MethodsThis scoping review included English-language articles published between 2018 and 2025 that reported advances in the development of phytochemical-based nanoformulations and their therapeutic evaluation in PC biological models. On the contrary, nanoformulation studies focused on cancers other than PC were excluded, as were those based solely on computational analyses or addressing a phytochemical or a nanoplatform without combining both into a nanoformulation. Different types of scientific communication, such as reviews, book chapters, commentaries, and news, were not considered. The literature searches were conducted across 6 databases, including Scopus, Web of Science, and PubMed.ResultsIn this work, 26 eligible studies with preclinical data encompassing more than 20 distinct nanotechnological platforms were reviewed. Most of the conclusions from these investigations were drawn from cell proliferation assays, primarily involving the PC cell lines PANC-1, MIA PaCa-2, and HPAF-II. A smaller subset of investigations supplemented these findings with data from xenograft PC models treated with phytochemical-loaded nanoformulations. Among the phytochemicals most frequently incorporated into the nanoformulations were paclitaxel, curcumin, lawsone, and sulforaphane.ConclusionPhytochemical-containing nanoformulations hold considerable promise as innovative therapeutic alternatives for PC. However, many available studies present notable limitations, such as the use of preclinical models with limited translatability to humans and a lack of a standardized method for preparing nanoformulations. Therefore, further investigations are required to clarify the therapeutic efficacy, safety profile, pharmacodynamics, pharmacokinetics, and overall clinical potential of these nanotechnology-driven approaches.",
+  "journal": "Int J Nanomedicine",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.2147/ijn.s571767",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/41878123/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T12:34:59.317071",
+  "source": "europepmc"
+}

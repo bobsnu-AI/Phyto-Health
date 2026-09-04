@@ -1,0 +1,16 @@
+{
+  "pmid": "42254374",
+  "title": "Efficacy and safety of different curcumin formulations in osteoarthritis: an umbrella review of systematic reviews",
+  "abstract": "BackgroundThis umbrella review synthesizes evidence from systematic reviews and meta-analyses evaluating the efficacy and safety of diverse curcumin formulations in the treatment of osteoarthritis (OA). The objective is to assess curcumin's therapeutic potential and inform future formulation development.MethodsA systematic search was conducted across PubMed, Web of Science, Cochrane, Embase, Scopus, and MEDLINE up to September 2025 to identify systematic reviews and meta-analyses investigating curcumin for OA (requiring at least one randomized controlled trial). Methodological quality was assessed using AMSTAR-2. Due to limited data and substantial heterogeneity in formulations and study designs, findings were synthesized qualitatively.ResultsTen meta-analyses and systematic reviews were included. Curcumin formulations exhibited significant improvements in pain (VAS) and joint function/stiffness (WOMAC), showing efficacy signals comparable to non-steroidal anti-inflammatory drugs (NSAIDs) and a more favorable tolerability profile in the available studies. However, methodological and clinical heterogeneity was substantial (AMSTAR-2 rated only three studies as high quality). Variations in curcumin composition, bioavailability-enhancing strategies, and extraction methods, coupled with the absence of direct comparative analyses among formulations, precluded definitive inter-group comparisons.ConclusionCurcumin-based interventions show promise for OA symptom management, with efficacy signals comparable to NSAIDs and appear to have a more favorable tolerability profile in the available studies, while addressing bioavailability challenges. Nevertheless, pronounced heterogeneity and the lack of head-to-head comparative studies, and incomplete safety reporting across reviews preclude definitive conclusions regarding superiority over NSAIDs or optimal formulations, and formulation-specific inferences remain limited. Future research should prioritize high-quality comparative trials or network meta-analyses to confirm efficacy signals and enable formulation-specific inferences.Systematic review registrationhttps://www.crd.york.ac.uk/PROSPERO, identifier CRD420251172722.",
+  "journal": "Front Med (Lausanne)",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.3389/fmed.2026.1801273",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/42254374/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T18:50:16.107702",
+  "source": "europepmc"
+}

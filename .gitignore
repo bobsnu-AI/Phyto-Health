@@ -2,14 +2,8 @@ __pycache__/
 *.pyc
 *.pyo
 .env
-# data 하위 파일은 제외하되 .gitkeep으로 디렉토리 구조 유지
-data/abstracts/*
-!data/abstracts/.gitkeep
-data/chroma_db/*
-!data/chroma_db/.gitkeep
-data/graph/*
-!data/graph/.gitkeep
-data/papers_metadata.csv
+# data 파일 포함 — seed 데이터로 Railway에 배포됨
+# (로컬 개발 시 생성되는 캐시성 파일만 제외)
 logs/
 *.log
 .wrangler/

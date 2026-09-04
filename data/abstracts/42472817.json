@@ -1,0 +1,16 @@
+{
+  "pmid": "42472817",
+  "title": "Efficacy of curcumin in depression: A grade-assessed systematic review and meta-analysis of randomized controlled trials",
+  "abstract": "BackgroundsCurcumin is a natural polyphenolic compound that is believed to have the potential to treat various ailments, including depressive mood. However, studies on the anti-depressive properties of curcumin have yielded conflicting results. This meta-analysis seeks to assess the clinical benefits of curcumin for patients with depression or depressive symptoms.MethodsWe systematically reviewed Scopus, PubMed, Web of Science, and Embase, inception February 15, 2025, to identify studies evaluating the impact of curcumin supplementation on depression in adults. The overall effects calculated using random effects model.ResultsNineteen RCTs were included in meta-analysis. A pooled analysis of eight studies showed a significant effect for curcumin supplementation in term of improving depression (SMD: -0.76; 95% CI: -1.22, -0.30, p = 0.001; I2= 94.5%, p-heterogeneity 2= 85.7%, p-heterogeneity ConclusionsThis meta-analysis suggests that curcumin supplementation may improve depression and depressive symptoms significantly; however, due to sensitivity analysis the observed effect was fragile. Therefore, these findings should be interpreted with caution, and further high-quality trials are needed to determine its potential clinical efficacy.",
+  "journal": "Ann Gen Psychiatry",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.1186/s12991-026-00676-z",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/42472817/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T18:50:16.107609",
+  "source": "europepmc"
+}

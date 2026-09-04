@@ -1,0 +1,16 @@
+{
+  "pmid": "41779386",
+  "title": "Preventing Hand-Foot Syndrome in Patients With Cancer: A Systematic Review and Network Meta-Analysis",
+  "abstract": "ImportanceHand-foot syndrome (HFS) is a common dose-limiting toxic effect of several chemotherapy agents, particularly capecitabine. Despite its substantial impact on the patient's quality of life and potential to compromise therapeutic efficacy, effective preventive strategies remain limited.ObjectiveTo evaluate and compare the efficacy of pharmacologic interventions for the prevention of chemotherapy-induced HFS through a network meta-analysis of published results of randomized clinical trials (RCTs).Data sourcesPubMed, Embase, and Cochrane CENTRAL were systematically searched from inception through November 2024 for relevant RCTs.Study selectionEligible studies were phase 2 or 3 RCTs that compared systemic or topical prophylactic interventions for the prevention of HFS.Data extraction and synthesisData extraction was performed by 2 reviewers, and disagreements were resolved by consensus. Risk of bias was assessed using the Cochrane Risk of Bias tool. A frequentist random-effects network meta-analysis was conducted.Main outcomes and measuresThe primary income was incidence of grade 2 or higher HFS. The secondary outcome was the incidence of any-grade HFS. Odds ratios (ORs) with 95% CIs were estimated. Ranking was assessed using P-scores and surface under the cumulative ranking (SUCRA) values.ResultsNineteen RCTs were included, of which 17 trials comprising 2192 patients (median [range] age, 57 [56-61] years) were analyzed for the primary outcome. Compared with placebo, topical silymarin (OR, 0.08; 95% CI, 0.01-0.71), diclofenac (OR, 0.23; 95% CI, 0.08-0.62), 400-mg pyridoxine (OR, 0.28; 95% CI, 0.09-0.88), and celecoxib (OR, 0.41; 95% CI, 0.18-0.95) significantly reduced grade 2 or higher HFS. Diclofenac (OR, 0.30; 95% CI, 0.13-0.69) and celecoxib (OR, 0.46; 95% CI, 0.22-0.94) also reduced overall HFS incidence. In contrast, silymarin and 400-mg pyridoxine did not show benefit for overall HFS, while mapisal increased HFS risk (OR, 3.04; 95% CI, 1.07-8.64). Ranking analyses showed the highest SUCRA value for silymarin (0.91) and diclofenac (0.76).Conclusions and relevanceIn this systematic review and network meta-analysis, diclofenac and silymarin were the most effective preventive strategies for HFS, with silymarin requiring confirmation in a larger randomized trial. Diclofenac emerged as the agent with the best overall supporting evidence, informed by both effect estimates and study quality.",
+  "journal": "JAMA Dermatol",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.1001/jamadermatol.2026.0042",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/41779386/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T12:34:13.901371",
+  "source": "europepmc"
+}

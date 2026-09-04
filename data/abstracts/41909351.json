@@ -1,0 +1,16 @@
+{
+  "pmid": "41909351",
+  "title": "A Systematic Review With Targeted Meta-Analyses of Curcumin and Berberine In Vitro Cytotoxicity Models (2014-2026)",
+  "abstract": "Traditional systems of medicine (siddha, ayurveda, and traditional Chinese medicine (TCM)) contribute a large fraction of natural products investigated for anticancer activity. Yet quantitative synthesis is often invalidated by extreme methodological heterogeneity (different cell lines, exposure times, and viability assays). Therefore, we performed a Preferred Reporting Items for Systematic Reviews and Meta-Analyses (PRISMA)-guided systematic review of preclinical studies between 2014 and 2026, and conducted targeted meta-analyses only in narrowly matched strata where pooling is defensible, i.e., (i) curcumin against Michigan Cancer Foundation-7 (MCF-7) breast cancer cells at 48 hours using MTT-like viability assays and (ii) berberine against HepG2 hepatocellular carcinoma cells at 48 hours using MTT-like assays. Effect sizes were half-maximal inhibitory concentration (IC50) values, analyzed on the log scale with random-effects (restricted maximum likelihood (REML)) models. When publications did not report variance for IC50, a conservative within-study coefficient of variation of 20% was assumed and explored in sensitivity analyses. Across three curcumin studies (MCF-7, 48 hours), the pooled geometric mean IC50 was 22.85 µM (95% CI: 11.04-47.27) with high heterogeneity (I² = 93.54%). Across two berberine studies (HepG2, 48 hours), the pooled geometric mean IC50 was 31.63 µM (95% CI: 22.84-43.79) with moderate heterogeneity (I² = 63.70%). Mechanistically, the included studies converge on apoptosis induction and anti-metastatic signaling: curcumin downregulated anti-apoptotic nodes (e.g., Mcl-1) and modulated microRNAs, while berberine affected epithelial-mesenchymal transition (EMT)-linked pathways (e.g., transforming growth factor-beta (TGF-β)/Smad), telomerase-associated phenotypes, and metabolic transport targets. We additionally map representative siddha herbo-mineral and ayurvedic polyherbal preclinical evidence and discuss translational obstacles (standardization, bioavailability, and reporting quality). To improve preclinical data transparency, we recommend protocol preregistration, such as Clinical Trials Registry - India (CTRI), and public deposition of extracted datasets and analysis scripts.",
+  "journal": "Cureus",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.7759/cureus.104165",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/41909351/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T12:34:13.901108",
+  "source": "europepmc"
+}

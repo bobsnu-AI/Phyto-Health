@@ -1,0 +1,16 @@
+{
+  "pmid": "42422084",
+  "title": "The potential value of curcumin in breast cancer: a systematic review and meta-analysis of preclinical studies",
+  "abstract": "ObjectivesCurcumin has attracted considerable attention due to its multi-target anti-tumor properties and favorable safety profile. However, preclinical studies in breast cancer are challenged by considerable model heterogeneity and inconsistent findings. The objective of this study is to comprehensively evaluate the anti-tumor efficacy and safety of curcumin through systematic analysis and synthesis of animal experimental evidence, aiming to establish a theoretical foundation for clinical translation.MethodsRandomized controlled animal studies were systematically searched through PubMed, Web of Science, EMBASE, and the Cochrane Library up to 30 April 2025. Outcomes evaluated included tumor weight, tumor volume, cell proliferation (Ki-67 positivity), apoptosis (TUNEL positivity), liver and kidney function, and hematological indices.ResultsCurcumin significantly reduced tumor weight (SMD = -1.65, 95% CI: -2.27 to -1.02, p ConclusionCurcumin demonstrates significant inhibitory effects on breast cancer growth and enhances apoptosis with favorable short-term safety in animal models. Further clinical trials are warranted to validate these findings in clinical settings.",
+  "journal": "Front Pharmacol",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [],
+  "doi": "10.3389/fphar.2026.1693452",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/42422084/",
+  "is_meta_analysis": false,
+  "is_systematic_review": false,
+  "crawled_at": "2026-08-03T12:34:13.901023",
+  "source": "europepmc"
+}

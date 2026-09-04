@@ -14,7 +14,9 @@ from chromadb.config import Settings
 from openai import OpenAI
 from graph_builder import find_subgraph_for_entities, subgraph_to_context_text
 
-DATA_DIR = Path(__file__).parent.parent / "data"
+# DATA_DIR: 환경변수 DATA_DIR → Railway Volume(/data) → 앱 내부 data/ 순으로 우선 사용
+_env_data = os.environ.get("DATA_DIR", "")
+DATA_DIR = Path(_env_data) if _env_data else Path(__file__).parent.parent / "data"
 CHROMA_DIR = DATA_DIR / "chroma_db"
 CHROMA_DIR.mkdir(parents=True, exist_ok=True)
 ABSTRACTS_DIR = DATA_DIR / "abstracts"

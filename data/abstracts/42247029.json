@@ -1,0 +1,22 @@
+{
+  "pmid": "42247029",
+  "title": "Curcumin versus placebo in benign prostatic hyperplasia: a systematic review and meta-analysis",
+  "abstract": "BackgroundBenign prostatic hyperplasia (BPH) is a highly prevalent condition among aging men and a major cause of lower urinary tract symptoms (LUTS). Although α1-adrenoceptor blockers and 5-alpha-reductase inhibitors remain the cornerstone of treatment, their long-term use is frequently limited by adverse effects and suboptimal symptom control. Growing experimental and clinical evidence suggests that chronic prostatic inflammation plays a central role in BPH progression, raising interest in anti-inflammatory compounds such as curcumin. However, the clinical effectiveness of curcumin in BPH remains poorly defined.MethodsWe conducted a systematic review and meta-analysis of randomized and nonrandomized comparative studies evaluating curcumin versus placebo in men with BPH receiving α-blockers and/or 5-alpha-reductase inhibitors. Searches were performed in PubMed, Embase, and Cochrane CENTRAL. The primary outcome was change in International Prostate Symptom Score (IPSS). Secondary outcomes included prostate-specific antigen (PSA), prostate volume (PV), post-void residual volume (PVR), and maximum urinary flow rate (Q-max). Pooled analyses were performed using a random-effects model.ResultsSix studies involving 697 patients met the inclusion criteria. Compared with placebo, curcumin was associated with a significant improvement in IPSS (MD - 4.11; p = 0.0009), accompanied by reductions in PSA (MD - 0.52 ng/mL), PV (MD - 3.78 mL), and PVR (MD -2.38 mL), as well as an increase in Q-max (MD 2.09 mL/s). Subgroup analyses suggested greater symptomatic benefit among patients receiving α-blockers alone compared with those on combined α-blocker and 5-alpha-reductase inhibitor therapy. Substantial heterogeneity was observed across outcomes.ConclusionCurcumin supplementation was associated with significant improvement in LUTS and functional parameters in men with BPH. Although these findings support a potential adjunctive role for curcumin, the available evidence is limited by heterogeneity and study design variability. Well-designed, large-scale randomized trials are warranted to define its clinical utility, optimal formulation, and long-term effects.",
+  "journal": "Eur J Clin Pharmacol",
+  "year": "2026",
+  "authors": [],
+  "mesh_terms": [],
+  "pub_types": [
+    "meta-analysis",
+    "systematic review",
+    "review-article",
+    "review",
+    "journal article"
+  ],
+  "doi": "10.1007/s00228-026-04093-9",
+  "url": "https://pubmed.ncbi.nlm.nih.gov/42247029/",
+  "is_meta_analysis": true,
+  "is_systematic_review": true,
+  "crawled_at": "2026-08-03T18:58:04.889553",
+  "source": "europepmc"
+}
