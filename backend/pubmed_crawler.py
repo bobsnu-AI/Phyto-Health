@@ -44,7 +44,8 @@ HEALTH_CONDITIONS = [
     "cancer","cardiovascular disease","diabetes","obesity",
     "inflammation","oxidative stress","gut microbiota",
     "cognitive function","aging","immune function",
-    "hypertension","liver disease","metabolic syndrome"
+    "hypertension","liver disease","metabolic syndrome",
+    "sarcopenia"
 ]
 
 # 논문 타입 → Europe PMC pubType 매핑

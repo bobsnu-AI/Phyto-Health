@@ -540,16 +540,33 @@
     <div class="form-row" style="margin-bottom:1rem">
       <div>
         <label>건강 조건 (선택사항)</label>
-        <select class="select" id="healthSelect">
-          <option value="">— 모든 건강 조건 —</option>
-          <option>cancer</option><option>cardiovascular disease</option>
-          <option>diabetes</option><option>obesity</option>
-          <option>inflammation</option><option>oxidative stress</option>
-          <option>gut microbiota</option><option>cognitive function</option>
-          <option>aging</option><option>immune function</option>
-          <option>hypertension</option><option>liver disease</option>
-          <option>metabolic syndrome</option>
-        </select>
+        <div style="display:flex;gap:6px;align-items:flex-start;flex-direction:column">
+          <select class="select" id="healthSelect" onchange="onHealthSelectChange()" style="width:100%">
+            <option value="">— 모든 건강 조건 —</option>
+            <option>cancer</option>
+            <option>cardiovascular disease</option>
+            <option>diabetes</option>
+            <option>obesity</option>
+            <option>inflammation</option>
+            <option>oxidative stress</option>
+            <option>gut microbiota</option>
+            <option>cognitive function</option>
+            <option>aging</option>
+            <option>immune function</option>
+            <option>hypertension</option>
+            <option>liver disease</option>
+            <option>metabolic syndrome</option>
+            <option>sarcopenia</option>
+            <option value="__custom__">✏️ 직접 입력...</option>
+          </select>
+          <input type="text" id="healthCustomInput" placeholder="예: muscle atrophy, neurodegeneration 등"
+            style="display:none;width:100%;background:var(--surface2);border:1px solid var(--border-light);
+                   color:var(--text);border-radius:8px;padding:8px 12px;font-size:0.875rem"
+            oninput="validateCustomHealth()">
+          <div id="healthCustomHint" style="display:none;font-size:0.75rem;color:#64748b;margin-top:2px">
+            영문 키워드를 입력하세요. PubMed 검색어로 직접 사용됩니다.
+          </div>
+        </div>
       </div>
       <div>
         <label>논문 타입</label>
@@ -1168,6 +1185,42 @@ setInterval(loadStats, 30000);
 // ════════════════════════════════════════
 //   크롤링
 // ════════════════════════════════════════
+// ════════════════════════════════════════
+//   건강 조건 선택 + 직접 입력 핸들러
+// ════════════════════════════════════════
+function onHealthSelectChange() {
+  const sel    = document.getElementById('healthSelect');
+  const input  = document.getElementById('healthCustomInput');
+  const hint   = document.getElementById('healthCustomHint');
+  const isCustom = sel.value === '__custom__';
+  input.style.display = isCustom ? '' : 'none';
+  hint.style.display  = isCustom ? '' : 'none';
+  if (isCustom) { input.focus(); input.value = ''; }
+}
+
+function getHealthConditionValue() {
+  const sel = document.getElementById('healthSelect');
+  if (sel.value === '__custom__') {
+    return document.getElementById('healthCustomInput').value.trim() || null;
+  }
+  return sel.value || null;
+}
+
+function validateCustomHealth() {
+  const input = document.getElementById('healthCustomInput');
+  const val   = input.value.trim();
+  // 한글 입력 경고
+  if (/[가-힣]/.test(val)) {
+    input.style.borderColor = '#f59e0b';
+    document.getElementById('healthCustomHint').innerHTML =
+      '⚠️ PubMed는 영문 키워드를 권장합니다. (예: sarcopenia, muscle wasting)';
+  } else {
+    input.style.borderColor = val ? '#22c55e' : '';
+    document.getElementById('healthCustomHint').innerHTML =
+      '영문 키워드를 입력하세요. PubMed 검색어로 직접 사용됩니다.';
+  }
+}
+
 async function startCrawl() {
   const phyto = document.getElementById('phytoInput').value.trim();
   if (!phyto) { showToast('파이토케미컬 이름을 입력하세요', 'error'); return; }
@@ -1180,7 +1233,7 @@ async function startCrawl() {
   try {
     const res = await axios.post(API+'/api/crawl', {
       phytochemical: phyto,
-      health_condition: document.getElementById('healthSelect').value || null,
+      health_condition: getHealthConditionValue() || null,
       max_results: parseInt(document.getElementById('maxResultsSelect').value),
       meta_analysis_only: document.getElementById('metaOnlyCheck').checked,
       pub_type: document.getElementById('pubTypeSelect').value || null
