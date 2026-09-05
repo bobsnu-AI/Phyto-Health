@@ -1,6 +1,6 @@
 """
-FastAPI 메인 애플리케이션
-파이토케미컬 연구 플랫폼 백엔드
+FastAPI 메인 애플리케이션 — 멀티유저 버전
+각 사용자는 독립된 data/users/<user_id>/ 디렉토리와 RAG/Graph 인스턴스를 가짐
 """
 
 import asyncio
@@ -9,20 +9,17 @@ import os
 from pathlib import Path
 from typing import Optional
 import uvicorn
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Query, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # ─── Genspark LLM 프록시 설정 ─────────────────────────────────────────────────
-# 환경변수 OPENAI_API_KEY / OPENAI_BASE_URL 이 주입돼 있으면 그것을 우선 사용
-# (Genspark 프록시: https://www.genspark.ai/api/llm_proxy/v1)
 _ENV_OPENAI_KEY  = os.environ.get("GSK_TOKEN", "") or os.environ.get("OPENAI_API_KEY", "")
 _ENV_OPENAI_BASE = os.environ.get("OPENAI_BASE_URL", "")
 
 def resolve_openai_key(ui_key: str = "") -> tuple[str, str]:
-    """(api_key, base_url) 반환 — 환경변수 우선, 없으면 UI 입력값 사용"""
     key  = _ENV_OPENAI_KEY  or ui_key
     base = _ENV_OPENAI_BASE or ""
     return key, base
@@ -31,21 +28,28 @@ def resolve_openai_key(ui_key: str = "") -> tuple[str, str]:
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
 
+from auth import (
+    RegisterRequest, LoginRequest,
+    register_user, login_user, get_user_info,
+    get_current_user, get_user_data_dir,
+    ROOT_DATA_DIR
+)
 from pubmed_crawler import (
-    crawl_phytochemical_papers, load_all_papers, get_stats,
-    PHYTOCHEMICAL_CATEGORIES, HEALTH_CONDITIONS, ABSTRACTS_DIR
+    crawl_phytochemical_papers,
+    PHYTOCHEMICAL_CATEGORIES, HEALTH_CONDITIONS
 )
 from graph_builder import (
-    build_graph_from_papers, load_graph, search_graph, get_graph_stats, save_graph,
-    find_subgraph_for_entities
+    build_graph_from_papers, search_graph, get_graph_stats,
+    save_graph, find_subgraph_for_entities,
+    load_graph_from_dir, get_graph_stats_from_dir
 )
 from rag_chatbot import RAGChatbot
 
 # ─── 앱 초기화 ───────────────────────────────────────────────────────────────
 app = FastAPI(
     title="PhytoGraph Research Platform",
-    description="파이토케미컬 건강 상관성 연구 플랫폼",
-    version="1.0.0"
+    description="파이토케미컬 건강 상관성 연구 플랫폼 — 멀티유저",
+    version="2.0.0"
 )
 
 app.add_middleware(
@@ -59,11 +63,58 @@ app.add_middleware(
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
-# 전역 상태
-crawl_progress = {}
-build_progress = {}
-index_progress = {}
-chatbot_instance: Optional[RAGChatbot] = None
+# ─── 사용자별 인스턴스 컨테이너 ──────────────────────────────────────────────
+# { user_id: RAGChatbot }
+_chatbot_cache: dict[str, RAGChatbot] = {}
+# { user_id: { task_id: progress_dict } }
+_crawl_progress: dict[str, dict] = {}
+_build_progress: dict[str, dict] = {}
+_index_progress: dict[str, dict] = {}
+
+
+def get_chatbot(user_id: str) -> RAGChatbot:
+    """사용자별 RAGChatbot 인스턴스 반환 (없으면 생성)"""
+    if user_id not in _chatbot_cache:
+        key, base = resolve_openai_key("")
+        user_dir = get_user_data_dir(user_id)
+        _chatbot_cache[user_id] = RAGChatbot(
+            openai_api_key=key,
+            base_url=base,
+            data_dir=str(user_dir)
+        )
+    return _chatbot_cache[user_id]
+
+
+def load_all_papers_for_user(user_id: str) -> list:
+    """사용자별 abstracts 디렉토리에서 모든 논문 로드"""
+    user_dir = get_user_data_dir(user_id)
+    abstracts_dir = user_dir / "abstracts"
+    papers = []
+    for f in abstracts_dir.glob("*.json"):
+        try:
+            with open(f, "r", encoding="utf-8") as fp:
+                papers.append(json.load(fp))
+        except Exception:
+            pass
+    return papers
+
+
+def get_stats_for_user(user_id: str) -> dict:
+    """사용자별 논문 통계"""
+    papers = load_all_papers_for_user(user_id)
+    meta = [p for p in papers if p.get("is_meta_analysis")]
+    sr   = [p for p in papers if p.get("is_systematic_review")]
+    years = {}
+    for p in papers:
+        y = p.get("year", "")
+        if y:
+            years[y] = years.get(y, 0) + 1
+    return {
+        "total_papers": len(papers),
+        "meta_analysis": len(meta),
+        "systematic_review": len(sr),
+        "papers_by_year": years
+    }
 
 
 # ─── Request Models ───────────────────────────────────────────────────────────
@@ -78,33 +129,43 @@ class CrawlRequest(BaseModel):
 class BuildGraphRequest(BaseModel):
     use_all_papers: bool = True
     pmids: Optional[list] = None
-    openai_api_key: Optional[str] = ""  # UI 입력 (없으면 환경변수 사용)
+    openai_api_key: Optional[str] = ""
 
 
 class ChatRequest(BaseModel):
     message: str
     chat_history: Optional[list] = []
-    openai_api_key: Optional[str] = ""  # UI 입력 (없으면 환경변수 사용)
+    openai_api_key: Optional[str] = ""
 
 
 class IndexRequest(BaseModel):
-    openai_api_key: Optional[str] = ""  # UI 입력 (없으면 환경변수 사용)
+    openai_api_key: Optional[str] = ""
 
 
-# ─── 유틸리티 ─────────────────────────────────────────────────────────────────
-def get_or_create_chatbot(api_key: str = "") -> RAGChatbot:
-    global chatbot_instance
-    key, base = resolve_openai_key(api_key)
-    if chatbot_instance is None:
-        chatbot_instance = RAGChatbot(key, base_url=base)
-    return chatbot_instance
+# ─── 인증 API ────────────────────────────────────────────────────────────────
+
+@app.post("/api/auth/register")
+async def register(request: RegisterRequest):
+    """회원가입"""
+    return register_user(request.username, request.password, request.email or "")
 
 
-# ─── API Routes ──────────────────────────────────────────────────────────────
+@app.post("/api/auth/login")
+async def login(request: LoginRequest):
+    """로그인 → JWT 토큰 반환"""
+    return login_user(request.username, request.password)
+
+
+@app.get("/api/auth/me")
+async def me(current_user: dict = Depends(get_current_user)):
+    """현재 로그인된 사용자 정보"""
+    return get_user_info(current_user["user_id"])
+
+
+# ─── 공개 API ────────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
-    """메인 페이지 서빙"""
     index_file = FRONTEND_DIR / "index.html"
     if index_file.exists():
         return FileResponse(str(index_file))
@@ -113,29 +174,37 @@ async def serve_frontend():
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "service": "PhytoGraph Research Platform"}
+    return {"status": "ok", "service": "PhytoGraph Research Platform v2.0 (Multi-user)"}
 
-
-# ─── PubMed 크롤링 ────────────────────────────────────────────────────────────
 
 @app.get("/api/categories")
 async def get_categories():
-    """파이토케미컬 카테고리 및 건강 조건 목록"""
     return {
         "phytochemical_categories": PHYTOCHEMICAL_CATEGORIES,
         "health_conditions": HEALTH_CONDITIONS
     }
 
 
+# ─── PubMed 크롤링 (사용자별) ─────────────────────────────────────────────────
+
 @app.post("/api/crawl")
-async def crawl_papers(request: CrawlRequest, background_tasks: BackgroundTasks):
-    """PubMed 논문 크롤링 시작 (비동기)"""
-    task_id = f"crawl_{request.phytochemical}_{id(request)}"
-    crawl_progress[task_id] = {"status": "started", "step": "initializing"}
-    
+async def crawl_papers(
+    request: CrawlRequest,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    """PubMed 논문 크롤링 — 사용자 자신의 abstracts 디렉토리에 저장"""
+    user_id  = current_user["user_id"]
+    task_id  = f"crawl_{request.phytochemical}_{id(request)}"
+    user_dir = get_user_data_dir(user_id)
+    abstracts_dir = user_dir / "abstracts"
+
+    _crawl_progress.setdefault(user_id, {})
+    _crawl_progress[user_id][task_id] = {"status": "started", "step": "initializing"}
+
     def update_progress(data):
-        crawl_progress[task_id] = {**data, "status": "running"}
-    
+        _crawl_progress[user_id][task_id] = {**data, "status": "running"}
+
     def do_crawl():
         try:
             result = crawl_phytochemical_papers(
@@ -144,20 +213,21 @@ async def crawl_papers(request: CrawlRequest, background_tasks: BackgroundTasks)
                 max_results=request.max_results,
                 meta_analysis_only=request.meta_analysis_only,
                 pub_type=request.pub_type,
-                progress_callback=update_progress
+                progress_callback=update_progress,
+                abstracts_dir=abstracts_dir      # ← 사용자별 경로
             )
             if result["total"] == 0:
-                crawl_progress[task_id] = {
+                _crawl_progress[user_id][task_id] = {
                     "status": "complete",
                     "result": {
                         "total": 0, "meta_count": 0, "new_count": 0,
                         "query": result.get("query", ""),
                         "papers": [],
-                        "warning": "검색 결과가 없습니다. 검색어를 확인하거나 잠시 후 다시 시도하세요. (NCBI API 일시 차단 가능)"
+                        "warning": "검색 결과가 없습니다."
                     }
                 }
             else:
-                crawl_progress[task_id] = {
+                _crawl_progress[user_id][task_id] = {
                     "status": "complete",
                     "result": {
                         "total": result["total"],
@@ -168,18 +238,22 @@ async def crawl_papers(request: CrawlRequest, background_tasks: BackgroundTasks)
                     }
                 }
         except Exception as e:
-            crawl_progress[task_id] = {"status": "error", "message": str(e)}
-    
+            _crawl_progress[user_id][task_id] = {"status": "error", "message": str(e)}
+
     background_tasks.add_task(do_crawl)
     return {"task_id": task_id, "message": "크롤링 시작됨"}
 
 
 @app.get("/api/crawl/status/{task_id}")
-async def get_crawl_status(task_id: str):
-    """크롤링 작업 상태 확인"""
-    if task_id not in crawl_progress:
+async def get_crawl_status(
+    task_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = current_user["user_id"]
+    user_tasks = _crawl_progress.get(user_id, {})
+    if task_id not in user_tasks:
         raise HTTPException(404, "작업을 찾을 수 없습니다")
-    return crawl_progress[task_id]
+    return user_tasks[task_id]
 
 
 @app.get("/api/papers")
@@ -191,46 +265,38 @@ async def get_papers(
     year: Optional[str] = None,
     journal: Optional[str] = None,
     pub_type: Optional[str] = None,
-    sort_by: str = "year"
+    sort_by: str = "year",
+    current_user: dict = Depends(get_current_user)
 ):
-    """저장된 논문 목록 조회 — 다중 필터 + 정렬 지원"""
-    papers = load_all_papers()
-    
+    """사용자별 논문 목록"""
+    papers = load_all_papers_for_user(current_user["user_id"])
+
     if meta_only:
         papers = [p for p in papers if p.get("is_meta_analysis")]
-    
     if search:
-        search_lower = search.lower()
-        papers = [p for p in papers if 
-                  search_lower in p.get("title", "").lower() or
-                  search_lower in p.get("abstract", "").lower()]
-    
+        sl = search.lower()
+        papers = [p for p in papers if sl in p.get("title","").lower() or sl in p.get("abstract","").lower()]
     if year:
         papers = [p for p in papers if p.get("year") == year]
-    
     if journal:
-        j_lower = journal.lower()
-        papers = [p for p in papers if j_lower in p.get("journal", "").lower()]
-    
+        jl = journal.lower()
+        papers = [p for p in papers if jl in p.get("journal","").lower()]
     if pub_type == "meta":
         papers = [p for p in papers if p.get("is_meta_analysis")]
     elif pub_type == "sr":
         papers = [p for p in papers if p.get("is_systematic_review")]
 
-    # 정렬
     if sort_by == "year":
-        papers.sort(key=lambda x: x.get("year", "0"), reverse=True)
+        papers.sort(key=lambda x: x.get("year","0"), reverse=True)
     elif sort_by == "title":
-        papers.sort(key=lambda x: x.get("title", "").lower())
+        papers.sort(key=lambda x: x.get("title","").lower())
     elif sort_by == "journal":
-        papers.sort(key=lambda x: x.get("journal", "").lower())
-    
+        papers.sort(key=lambda x: x.get("journal","").lower())
+
     total = len(papers)
     start = (page - 1) * limit
-    paginated = papers[start:start + limit]
-    
     return {
-        "papers": paginated,
+        "papers": papers[start:start+limit],
         "total": total,
         "page": page,
         "total_pages": (total + limit - 1) // limit
@@ -238,68 +304,92 @@ async def get_papers(
 
 
 @app.get("/api/papers/stats")
-async def get_paper_stats():
-    """논문 통계"""
-    return get_stats()
+async def get_paper_stats(current_user: dict = Depends(get_current_user)):
+    return get_stats_for_user(current_user["user_id"])
 
 
-# ─── Graph DB ────────────────────────────────────────────────────────────────
+@app.get("/api/papers/years")
+async def get_paper_years(current_user: dict = Depends(get_current_user)):
+    papers = load_all_papers_for_user(current_user["user_id"])
+    years = sorted({p.get("year","") for p in papers if p.get("year")}, reverse=True)
+    return {"years": years}
+
+
+@app.get("/api/papers/journals")
+async def get_paper_journals(current_user: dict = Depends(get_current_user)):
+    papers = load_all_papers_for_user(current_user["user_id"])
+    counts: dict = {}
+    for p in papers:
+        j = p.get("journal","").strip()
+        if j:
+            counts[j] = counts.get(j,0) + 1
+    sorted_j = sorted(counts.items(), key=lambda x: -x[1])[:30]
+    return {"journals": [j for j,_ in sorted_j]}
+
+
+# ─── Graph DB (사용자별) ──────────────────────────────────────────────────────
 
 @app.post("/api/graph/build")
-async def build_graph(request: BuildGraphRequest, background_tasks: BackgroundTasks):
-    """LLM으로 그래프 DB 구축 (비동기)"""
-    task_id = f"graph_{id(request)}"
-    build_progress[task_id] = {"status": "started"}
-    
+async def build_graph(
+    request: BuildGraphRequest,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    """사용자 전용 그래프 구축"""
+    user_id  = current_user["user_id"]
+    task_id  = f"graph_{id(request)}"
+    user_dir = get_user_data_dir(user_id)
+
+    _build_progress.setdefault(user_id, {})
+    _build_progress[user_id][task_id] = {"status": "started"}
+
     def update_progress(data):
-        build_progress[task_id] = {**data, "status": "running"}
-    
+        _build_progress[user_id][task_id] = {**data, "status": "running"}
+
     def do_build():
         from openai import OpenAI
         try:
             key, base = resolve_openai_key(request.openai_api_key or "")
-            client = OpenAI(
-                api_key=key,
-                base_url=base or None  # None이면 기본 OpenAI 엔드포인트
-            )
-            print(f"[GraphBuild] base_url={base!r}, key_prefix={key[:8]}...")
-            
+            client = OpenAI(api_key=key, base_url=base or None)
+
             if request.use_all_papers:
-                papers = load_all_papers()
+                papers = load_all_papers_for_user(user_id)
             else:
-                papers = [p for p in load_all_papers() 
-                         if p.get('pmid') in (request.pmids or [])]
-            
+                all_p = load_all_papers_for_user(user_id)
+                papers = [p for p in all_p if p.get("pmid") in (request.pmids or [])]
+
             if not papers:
-                build_progress[task_id] = {
-                    "status": "error", 
-                    "message": "처리할 논문이 없습니다. 먼저 크롤링을 실행하세요."
+                _build_progress[user_id][task_id] = {
+                    "status": "error",
+                    "message": "처리할 논문이 없습니다."
                 }
                 return
-            
-            # 메모리/비용 절약: 최대 30개 논문
+
             papers = papers[:30]
-            
-            result = build_graph_from_papers(papers, client, update_progress)
-            
-            build_progress[task_id] = {
+            result = build_graph_from_papers(papers, client, update_progress, graph_dir=user_dir/"graph")
+
+            _build_progress[user_id][task_id] = {
                 "status": "complete",
                 "stats": result.get("stats", {}),
-                "message": f"그래프 구축 완료"
+                "message": "그래프 구축 완료"
             }
         except Exception as e:
-            build_progress[task_id] = {"status": "error", "message": str(e)}
-    
+            _build_progress[user_id][task_id] = {"status": "error", "message": str(e)}
+
     background_tasks.add_task(do_build)
     return {"task_id": task_id, "message": "그래프 구축 시작됨"}
 
 
 @app.get("/api/graph/build/status/{task_id}")
-async def get_build_status(task_id: str):
-    """그래프 구축 상태"""
-    if task_id not in build_progress:
+async def get_build_status(
+    task_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = current_user["user_id"]
+    user_tasks = _build_progress.get(user_id, {})
+    if task_id not in user_tasks:
         raise HTTPException(404, "작업을 찾을 수 없습니다")
-    return build_progress[task_id]
+    return user_tasks[task_id]
 
 
 @app.get("/api/graph")
@@ -309,218 +399,186 @@ async def get_graph(
     relation_type: Optional[str] = None,
     focus_node: Optional[str] = None,
     phytochemical: Optional[str] = None,
-    food_source_view: bool = False
+    food_source_view: bool = False,
+    current_user: dict = Depends(get_current_user)
 ):
-    """그래프 데이터 반환 — 다중 필터 지원"""
+    """사용자별 그래프 데이터"""
+    user_dir = get_user_data_dir(current_user["user_id"])
+    data = load_graph_from_dir(user_dir / "graph")
+
     if focus_node:
-        # 특정 노드 중심 서브그래프 (1-hop 이웃)
-        data = load_graph()
-        target = next((n for n in data["nodes"] if n["id"] == focus_node), None)
-        if target:
-            connected_edges = [e for e in data["edges"]
-                               if e["source"] == focus_node or e["target"] == focus_node]
-            neighbor_ids = set()
-            for e in connected_edges:
-                neighbor_ids.add(e["source"])
-                neighbor_ids.add(e["target"])
-            neighbor_ids.add(focus_node)
-            data = {
-                "nodes": [n for n in data["nodes"] if n["id"] in neighbor_ids],
-                "edges": connected_edges
-            }
+        connected_edges = [e for e in data["edges"] if e["source"]==focus_node or e["target"]==focus_node]
+        neighbor_ids = {e["source"] for e in connected_edges} | {e["target"] for e in connected_edges}
+        neighbor_ids.add(focus_node)
+        data = {"nodes": [n for n in data["nodes"] if n["id"] in neighbor_ids], "edges": connected_edges}
     elif phytochemical:
-        # 특정 파이토케미컬 중심 서브그래프
-        data = load_graph()
-        phyto_lower = phytochemical.lower()
-        phyto_nodes = [n for n in data["nodes"]
-                       if n.get("type") == "Phytochemical"
-                       and phyto_lower in n.get("name", "").lower()]
-        phyto_ids = {n["id"] for n in phyto_nodes}
-        connected_edges = [e for e in data["edges"]
-                           if e["source"] in phyto_ids or e["target"] in phyto_ids]
+        pl = phytochemical.lower()
+        phyto_ids = {n["id"] for n in data["nodes"] if n.get("type")=="Phytochemical" and pl in n.get("name","").lower()}
+        connected_edges = [e for e in data["edges"] if e["source"] in phyto_ids or e["target"] in phyto_ids]
         neighbor_ids = phyto_ids.copy()
         for e in connected_edges:
-            neighbor_ids.add(e["source"])
-            neighbor_ids.add(e["target"])
-        data = {
-            "nodes": [n for n in data["nodes"] if n["id"] in neighbor_ids],
-            "edges": connected_edges
-        }
+            neighbor_ids.add(e["source"]); neighbor_ids.add(e["target"])
+        data = {"nodes": [n for n in data["nodes"] if n["id"] in neighbor_ids], "edges": connected_edges}
     elif search:
-        data = search_graph(search)
-    else:
-        data = load_graph()
+        sl = search.lower()
+        matched = {n["id"] for n in data["nodes"] if sl in n.get("name","").lower()}
+        edges = [e for e in data["edges"] if e["source"] in matched or e["target"] in matched]
+        for e in edges:
+            matched.add(e["source"]); matched.add(e["target"])
+        data = {"nodes": [n for n in data["nodes"] if n["id"] in matched], "edges": edges}
 
-    # 식품 소스 전용 뷰: Phytochemical ↔ FoodSource 관계만
     if food_source_view:
-        allowed_types = {"Phytochemical", "FoodSource"}
-        fs_nodes = [n for n in data.get("nodes", []) if n.get("type") in allowed_types]
+        allowed = {"Phytochemical","FoodSource"}
+        fs_nodes = [n for n in data.get("nodes",[]) if n.get("type") in allowed]
         fs_ids = {n["id"] for n in fs_nodes}
-        fs_edges = [e for e in data.get("edges", [])
-                    if e["source"] in fs_ids and e["target"] in fs_ids]
-        data = {"nodes": fs_nodes, "edges": fs_edges}
+        data = {"nodes": fs_nodes, "edges": [e for e in data.get("edges",[]) if e["source"] in fs_ids and e["target"] in fs_ids]}
 
-    # 노드 타입 필터
     if node_type:
-        filtered_nodes = [n for n in data.get("nodes", []) if n.get("type") == node_type]
-        node_ids = {n["id"] for n in filtered_nodes}
-        filtered_edges = [e for e in data.get("edges", [])
-                          if e["source"] in node_ids and e["target"] in node_ids]
-        data = {"nodes": filtered_nodes, "edges": filtered_edges}
+        fn = [n for n in data.get("nodes",[]) if n.get("type")==node_type]
+        fids = {n["id"] for n in fn}
+        data = {"nodes": fn, "edges": [e for e in data.get("edges",[]) if e["source"] in fids and e["target"] in fids]}
 
-    # 관계 타입 필터 (엣지만, 연결된 노드는 유지)
     if relation_type:
-        filtered_edges = [e for e in data.get("edges", []) if e.get("type") == relation_type]
-        connected_ids = set()
-        for e in filtered_edges:
-            connected_ids.add(e["source"])
-            connected_ids.add(e["target"])
-        filtered_nodes = [n for n in data.get("nodes", []) if n["id"] in connected_ids]
-        data = {"nodes": filtered_nodes, "edges": filtered_edges}
+        fe = [e for e in data.get("edges",[]) if e.get("type")==relation_type]
+        cids = {e["source"] for e in fe} | {e["target"] for e in fe}
+        data = {"nodes": [n for n in data.get("nodes",[]) if n["id"] in cids], "edges": fe}
 
     return data
 
 
 @app.get("/api/graph/node/{node_id}")
-async def get_node_detail(node_id: str):
-    """특정 노드 상세 정보 + 연결 노드 목록"""
-    data = load_graph()
-    node = next((n for n in data["nodes"] if n["id"] == node_id), None)
+async def get_node_detail(
+    node_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    user_dir = get_user_data_dir(current_user["user_id"])
+    data = load_graph_from_dir(user_dir / "graph")
+    node = next((n for n in data["nodes"] if n["id"]==node_id), None)
     if not node:
         raise HTTPException(404, "노드를 찾을 수 없습니다")
-
-    # 연결된 엣지 + 이웃 노드
-    out_edges = [e for e in data["edges"] if e["source"] == node_id]
-    in_edges  = [e for e in data["edges"] if e["target"] == node_id]
+    out_edges = [e for e in data["edges"] if e["source"]==node_id]
+    in_edges  = [e for e in data["edges"] if e["target"]==node_id]
     neighbor_ids = {e["target"] for e in out_edges} | {e["source"] for e in in_edges}
-    neighbors = [n for n in data["nodes"] if n["id"] in neighbor_ids]
-
     return {
         "node": node,
         "out_edges": out_edges,
         "in_edges": in_edges,
-        "neighbors": neighbors,
+        "neighbors": [n for n in data["nodes"] if n["id"] in neighbor_ids],
         "degree": len(neighbor_ids)
     }
 
 
 @app.get("/api/graph/phytochemicals")
-async def get_phytochemical_nodes():
-    """그래프 내 파이토케미컬 노드 목록 (필터 드롭다운용)"""
-    data = load_graph()
-    phytos = [{"id": n["id"], "name": n["name"]}
-              for n in data.get("nodes", []) if n.get("type") == "Phytochemical"]
-    phytos.sort(key=lambda x: x["name"])
+async def get_phytochemical_nodes(current_user: dict = Depends(get_current_user)):
+    user_dir = get_user_data_dir(current_user["user_id"])
+    data = load_graph_from_dir(user_dir / "graph")
+    phytos = sorted(
+        [{"id": n["id"], "name": n["name"]} for n in data.get("nodes",[]) if n.get("type")=="Phytochemical"],
+        key=lambda x: x["name"]
+    )
     return {"phytochemicals": phytos}
 
 
 @app.get("/api/graph/relation-types")
-async def get_relation_types():
-    """그래프 내 관계 타입 목록 + 카운트"""
-    data = load_graph()
+async def get_relation_types(current_user: dict = Depends(get_current_user)):
+    user_dir = get_user_data_dir(current_user["user_id"])
+    data = load_graph_from_dir(user_dir / "graph")
     counts: dict = {}
-    for e in data.get("edges", []):
-        t = e.get("type", "UNKNOWN")
-        counts[t] = counts.get(t, 0) + 1
-    return {"relation_types": [{"type": k, "count": v} for k, v in sorted(counts.items())]}
-
-
-@app.get("/api/papers/years")
-async def get_paper_years():
-    """논문 연도 목록 (필터 드롭다운용)"""
-    papers = load_all_papers()
-    years = sorted({p.get("year", "") for p in papers if p.get("year")}, reverse=True)
-    return {"years": years}
-
-
-@app.get("/api/papers/journals")
-async def get_paper_journals():
-    """논문 저널 목록 (상위 30개)"""
-    papers = load_all_papers()
-    counts: dict = {}
-    for p in papers:
-        j = p.get("journal", "").strip()
-        if j:
-            counts[j] = counts.get(j, 0) + 1
-    sorted_j = sorted(counts.items(), key=lambda x: -x[1])[:30]
-    return {"journals": [j for j, _ in sorted_j]}
+    for e in data.get("edges",[]):
+        t = e.get("type","UNKNOWN")
+        counts[t] = counts.get(t,0) + 1
+    return {"relation_types": [{"type": k, "count": v} for k,v in sorted(counts.items())]}
 
 
 @app.get("/api/graph/stats")
-async def get_graph_statistics():
-    """그래프 통계"""
-    return get_graph_stats()
+async def get_graph_statistics(current_user: dict = Depends(get_current_user)):
+    user_dir = get_user_data_dir(current_user["user_id"])
+    return get_graph_stats_from_dir(user_dir / "graph")
 
 
 @app.delete("/api/graph")
-async def clear_graph():
-    """그래프 초기화"""
-    save_graph({"nodes": [], "edges": [], "stats": {}})
+async def clear_graph(current_user: dict = Depends(get_current_user)):
+    user_dir = get_user_data_dir(current_user["user_id"])
+    graph_file = user_dir / "graph" / "phytochemical_graph.json"
+    with open(graph_file, "w") as f:
+        json.dump({"nodes":[],"edges":[],"stats":{}}, f)
     return {"message": "그래프가 초기화되었습니다"}
 
 
 @app.get("/api/graph/path")
-async def get_graph_path(entities: str = Query(..., description="쉼표 구분 엔티티 이름 목록")):
-    """
-    GraphRAG 경로 탐색 — 엔티티 이름으로 연결 서브그래프 반환
-    예: /api/graph/path?entities=curcumin,inflammation,nf-kb
-    """
+async def get_graph_path(
+    entities: str = Query(...),
+    current_user: dict = Depends(get_current_user)
+):
+    user_dir = get_user_data_dir(current_user["user_id"])
     entity_list = [e.strip() for e in entities.split(",") if e.strip()]
-    result = find_subgraph_for_entities(entity_list, max_hops=2)
+    result = find_subgraph_for_entities(entity_list, max_hops=2, graph_dir=user_dir/"graph")
     return result
 
 
-# ─── RAG 챗봇 ────────────────────────────────────────────────────────────────
+# ─── RAG 챗봇 (사용자별) ──────────────────────────────────────────────────────
 
 @app.post("/api/rag/index")
-async def index_documents(request: IndexRequest, background_tasks: BackgroundTasks):
-    """문서 인덱싱 (비동기)"""
+async def index_documents(
+    request: IndexRequest,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = current_user["user_id"]
     task_id = f"index_{id(request)}"
-    index_progress[task_id] = {"status": "started"}
-    
+
+    _index_progress.setdefault(user_id, {})
+    _index_progress[user_id][task_id] = {"status": "started"}
+
     def update_progress(data):
-        index_progress[task_id] = {**data, "status": "running"}
-    
+        _index_progress[user_id][task_id] = {**data, "status": "running"}
+
     def do_index():
         try:
-            chatbot = get_or_create_chatbot(request.openai_api_key or "")
+            chatbot = get_chatbot(user_id)
             count = chatbot.index_from_files(update_progress)
-            index_progress[task_id] = {
+            _index_progress[user_id][task_id] = {
                 "status": "complete",
                 "indexed_count": count,
                 "total_indexed": chatbot.get_collection_stats()["indexed_documents"]
             }
         except Exception as e:
-            index_progress[task_id] = {"status": "error", "message": str(e)}
-    
+            _index_progress[user_id][task_id] = {"status": "error", "message": str(e)}
+
     background_tasks.add_task(do_index)
     return {"task_id": task_id, "message": "인덱싱 시작됨"}
 
 
 @app.get("/api/rag/index/status/{task_id}")
-async def get_index_status(task_id: str):
-    """인덱싱 상태"""
-    if task_id not in index_progress:
+async def get_index_status(
+    task_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = current_user["user_id"]
+    user_tasks = _index_progress.get(user_id, {})
+    if task_id not in user_tasks:
         raise HTTPException(404, "작업을 찾을 수 없습니다")
-    return index_progress[task_id]
+    return user_tasks[task_id]
 
 
 @app.post("/api/rag/chat")
-async def chat(request: ChatRequest):
-    """RAG 챗봇 질의응답"""
+async def chat(
+    request: ChatRequest,
+    current_user: dict = Depends(get_current_user)
+):
     try:
-        chatbot = get_or_create_chatbot(request.openai_api_key)
-        result = chatbot.chat(request.message, request.chat_history)
+        chatbot = get_chatbot(current_user["user_id"])
+        result  = chatbot.chat(request.message, request.chat_history)
         return result
     except Exception as e:
         raise HTTPException(500, f"챗봇 오류: {str(e)}")
 
 
 @app.get("/api/rag/stats")
-async def get_rag_stats():
-    """RAG 시스템 통계"""
-    if chatbot_instance:
-        return chatbot_instance.get_collection_stats()
+async def get_rag_stats(current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
+    if user_id in _chatbot_cache:
+        return _chatbot_cache[user_id].get_collection_stats()
     return {"indexed_documents": 0, "status": "not_initialized"}
 
 

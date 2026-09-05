@@ -8,3 +8,7 @@ logs/
 *.log
 .wrangler/
 node_modules/
+
+# 사용자별 런타임 데이터 (Railway Volume에 저장)
+data/users/
+data/users.db

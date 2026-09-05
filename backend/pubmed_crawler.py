@@ -376,12 +376,15 @@ def crawl_phytochemical_papers(
     max_results: int = 50,
     meta_analysis_only: bool = False,
     pub_type: str = None,
-    progress_callback=None
+    progress_callback=None,
+    abstracts_dir=None
 ) -> dict:
     """
     파이토케미컬 관련 논문 크롤링 메인 함수
     Europe PMC API 우선 사용
     """
+    _abs_dir = Path(abstracts_dir) if abstracts_dir else ABSTRACTS_DIR
+    _abs_dir.mkdir(parents=True, exist_ok=True)
     query = build_phytochemical_query(phytochemical, health_condition)
 
     if progress_callback:
@@ -399,7 +402,7 @@ def crawl_phytochemical_papers(
         return {"papers": [], "total": 0, "meta_count": 0,
                 "new_count": 0, "query": query}
 
-    existing_pmids = get_existing_pmids()
+    existing_pmids = get_existing_pmids(_abs_dir)
     new_count = sum(1 for p in papers if p["pmid"] not in existing_pmids)
 
     if progress_callback:
@@ -408,7 +411,7 @@ def crawl_phytochemical_papers(
             "message": f"{len(papers)}편 수집, {new_count}편 신규 저장 중..."
         })
 
-    saved = save_papers(papers)
+    saved = save_papers(papers, _abs_dir)
     meta_count = sum(1 for p in papers if p.get("is_meta_analysis"))
 
     if progress_callback:
@@ -430,9 +433,10 @@ def crawl_phytochemical_papers(
 # 저장 / 로드 유틸리티
 # ──────────────────────────────────────────────────────────────────────────────
 
-def get_existing_pmids() -> set:
+def get_existing_pmids(abs_dir=None) -> set:
+    _dir = Path(abs_dir) if abs_dir else ABSTRACTS_DIR
     pmids = set()
-    for f in ABSTRACTS_DIR.glob("*.json"):
+    for f in _dir.glob("*.json"):
         pmids.add(f.stem)
     meta_file = DATA_DIR / "papers_metadata.csv"
     if meta_file.exists():
@@ -444,16 +448,18 @@ def get_existing_pmids() -> set:
     return pmids
 
 
-def save_papers(papers: list) -> int:
+def save_papers(papers: list, abs_dir=None) -> int:
+    _dir = Path(abs_dir) if abs_dir else ABSTRACTS_DIR
+    _dir.mkdir(parents=True, exist_ok=True)
     saved = 0
     for paper in papers:
         if not paper:
             continue
         pmid = paper["pmid"]
-        json_path = ABSTRACTS_DIR / f"{pmid}.json"
+        json_path = _dir / f"{pmid}.json"
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(paper, f, ensure_ascii=False, indent=2)
-        txt_path = ABSTRACTS_DIR / f"{pmid}.txt"
+        txt_path = _dir / f"{pmid}.txt"
         with open(txt_path, "w", encoding="utf-8") as f:
             f.write(f"Title: {paper['title']}\n\nAbstract: {paper['abstract']}")
         saved += 1

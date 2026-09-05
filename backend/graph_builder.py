@@ -147,7 +147,7 @@ def extract_graph_entities(paper: dict, openai_client: OpenAI) -> dict:
         return {"entities": [], "relations": []}
 
 
-def build_graph_from_papers(papers: list, openai_client: OpenAI, progress_callback=None) -> dict:
+def build_graph_from_papers(papers: list, openai_client: OpenAI, progress_callback=None, graph_dir=None) -> dict:
     """
     다수 논문에서 그래프 구축
     중복 엔티티 병합, 정규화 처리
@@ -240,7 +240,7 @@ def build_graph_from_papers(papers: list, openai_client: OpenAI, progress_callba
     
     # 그래프 저장
     graph_data = serialize_graph(G)
-    save_graph(graph_data)
+    save_graph(graph_data, graph_dir=graph_dir)
     
     if progress_callback:
         progress_callback({
@@ -300,7 +300,16 @@ def serialize_graph(G: nx.DiGraph) -> dict:
     }
 
 
-def save_graph(graph_data: dict):
+def _get_graph_file(graph_dir=None) -> Path:
+    """graph_dir이 주어지면 그 경로, 아니면 기본 GRAPH_FILE 사용"""
+    if graph_dir is not None:
+        d = Path(graph_dir)
+        d.mkdir(parents=True, exist_ok=True)
+        return d / "phytochemical_graph.json"
+    return GRAPH_FILE
+
+
+def save_graph(graph_data: dict, graph_dir=None):
     """그래프 데이터 JSON 저장"""
     # 통계 업데이트
     node_types = {}
@@ -316,16 +325,33 @@ def save_graph(graph_data: dict):
     graph_data["stats"]["node_types"] = node_types
     graph_data["stats"]["edge_types"] = edge_types
     
-    with open(GRAPH_FILE, 'w', encoding='utf-8') as f:
+    graph_file = _get_graph_file(graph_dir)
+    with open(graph_file, 'w', encoding='utf-8') as f:
         json.dump(graph_data, f, ensure_ascii=False, indent=2)
 
 
-def load_graph() -> dict:
+def load_graph(graph_dir=None) -> dict:
     """저장된 그래프 로드"""
-    if GRAPH_FILE.exists():
-        with open(GRAPH_FILE, 'r', encoding='utf-8') as f:
+    graph_file = _get_graph_file(graph_dir)
+    if graph_file.exists():
+        with open(graph_file, 'r', encoding='utf-8') as f:
             return json.load(f)
     return {"nodes": [], "edges": [], "stats": {}}
+
+
+# ─── 멀티유저 편의 함수 ──────────────────────────────────────────────────────
+def load_graph_from_dir(graph_dir) -> dict:
+    """사용자별 graph_dir에서 그래프 로드"""
+    return load_graph(graph_dir=graph_dir)
+
+
+def get_graph_stats_from_dir(graph_dir) -> dict:
+    """사용자별 graph_dir 기준 통계"""
+    graph_data = load_graph(graph_dir=graph_dir)
+    return graph_data.get("stats", {
+        "total_nodes": len(graph_data.get("nodes", [])),
+        "total_edges": len(graph_data.get("edges", []))
+    })
 
 
 def search_graph(query: str) -> dict:
@@ -443,7 +469,7 @@ def get_graph_stats() -> dict:
     })
 
 
-def find_subgraph_for_entities(entity_names: list, max_hops: int = 2) -> dict:
+def find_subgraph_for_entities(entity_names: list, max_hops: int = 2, graph_dir=None) -> dict:
     """
     GraphRAG 경로 탐색 — 엔티티 이름 목록으로 연결 서브그래프 반환
     
@@ -456,7 +482,7 @@ def find_subgraph_for_entities(entity_names: list, max_hops: int = 2) -> dict:
     if not entity_names:
         return {"nodes": [], "edges": [], "seed_ids": [], "paths": []}
 
-    graph_data = load_graph()
+    graph_data = load_graph(graph_dir=graph_dir)
     all_nodes = graph_data.get("nodes", [])
     all_edges = graph_data.get("edges", [])
 

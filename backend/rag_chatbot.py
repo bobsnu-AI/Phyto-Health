@@ -147,7 +147,7 @@ class RAGChatbot:
     def index_from_files(self, progress_callback=None) -> int:
         """저장된 JSON 파일들을 인덱싱"""
         papers = []
-        for json_file in ABSTRACTS_DIR.glob("*.json"):
+        for json_file in self.abstracts_dir.glob("*.json"):
             try:
                 with open(json_file, 'r', encoding='utf-8') as f:
                     papers.append(json.load(f))
@@ -218,7 +218,7 @@ class RAGChatbot:
         graph_subgraph = {"nodes": [], "edges": [], "seed_ids": [], "paths": []}
         graph_context_text = ""
         if query_entities:
-            graph_subgraph = find_subgraph_for_entities(query_entities, max_hops=2)
+            graph_subgraph = find_subgraph_for_entities(query_entities, max_hops=2, graph_dir=self.graph_dir)
             if graph_subgraph.get("edges"):
                 graph_context_text = subgraph_to_context_text(graph_subgraph, max_relations=25)
                 print(f"[GraphRAG] 그래프 컨텍스트: {len(graph_subgraph['edges'])}개 관계 추출")
@@ -441,7 +441,7 @@ class RAGChatbot:
             # ── 그래프 경로 탐색 ────────────────────────────────────────────
             entity_list = sorted(candidates)[:20]  # 최대 20개 엔티티
             print(f"[GraphRAG] 엔티티 추출: {entity_list[:10]}...")
-            subgraph = find_subgraph_for_entities(entity_list, max_hops=2)
+            subgraph = find_subgraph_for_entities(entity_list, max_hops=2, graph_dir=self.graph_dir)
             return subgraph
 
         except Exception as e:

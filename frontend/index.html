@@ -381,11 +381,96 @@
         <div class="logo-sub">파이토케미컬 연구 인텔리전스 플랫폼</div>
       </div>
     </div>
-    <div class="api-key-area">
-      <span class="badge-key ok" style="font-size:0.78rem">🔑 서버 키 사용 중</span>
+    <div class="api-key-area" id="userArea">
+      <!-- 로그인 전: 로그인 버튼 / 로그인 후: 사용자 정보 -->
+      <button id="loginHeaderBtn" onclick="openAuthModal('login')" class="btn" style="background:#065f46;color:#34d399;padding:6px 14px;font-size:0.8rem">
+        <i class="fas fa-sign-in-alt"></i> 로그인
+      </button>
+      <div id="userInfo" style="display:none;align-items:center;gap:10px">
+        <span id="usernameBadge" style="color:#34d399;font-size:0.85rem;font-weight:600"></span>
+        <button onclick="logout()" class="btn" style="background:#1e293b;color:#94a3b8;padding:5px 10px;font-size:0.75rem;border:1px solid #334155">
+          <i class="fas fa-sign-out-alt"></i> 로그아웃
+        </button>
+      </div>
     </div>
   </div>
 </header>
+
+<!-- ══════════════ 로그인/회원가입 모달 ══════════════ -->
+<div id="authModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:2rem;width:360px;max-width:90vw;position:relative">
+    <button onclick="closeAuthModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:#94a3b8;font-size:1.2rem;cursor:pointer">✕</button>
+
+    <!-- 탭 -->
+    <div style="display:flex;gap:0;margin-bottom:1.5rem;background:#0f172a;border-radius:10px;padding:4px">
+      <button id="loginTabBtn" onclick="switchAuthTab('login')" style="flex:1;padding:8px;border:none;border-radius:8px;background:#065f46;color:#34d399;font-weight:600;cursor:pointer;font-size:0.875rem">로그인</button>
+      <button id="registerTabBtn" onclick="switchAuthTab('register')" style="flex:1;padding:8px;border:none;border-radius:8px;background:none;color:#94a3b8;font-weight:600;cursor:pointer;font-size:0.875rem">회원가입</button>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <div id="loginForm">
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:0.8rem;color:#94a3b8;margin-bottom:4px">사용자명</label>
+        <input id="loginUsername" type="text" placeholder="사용자명" autocomplete="username"
+          style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:8px;padding:10px 14px;font-size:0.9rem"
+          onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+      </div>
+      <div style="margin-bottom:1.25rem">
+        <label style="display:block;font-size:0.8rem;color:#94a3b8;margin-bottom:4px">비밀번호</label>
+        <input id="loginPassword" type="password" placeholder="비밀번호" autocomplete="current-password"
+          style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:8px;padding:10px 14px;font-size:0.9rem"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div id="loginError" style="color:#fca5a5;font-size:0.8rem;margin-bottom:0.75rem;display:none"></div>
+      <button onclick="doLogin()" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">
+        <i class="fas fa-sign-in-alt"></i> 로그인
+      </button>
+      <p style="text-align:center;margin-top:1rem;font-size:0.8rem;color:#64748b">
+        계정이 없으신가요? <a href="#" onclick="switchAuthTab('register');return false" style="color:#34d399">회원가입</a>
+      </p>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <div id="registerForm" style="display:none">
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:0.8rem;color:#94a3b8;margin-bottom:4px">사용자명 <span style="color:#64748b">(3자 이상)</span></label>
+        <input id="regUsername" type="text" placeholder="사용자명" autocomplete="username"
+          style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:8px;padding:10px 14px;font-size:0.9rem">
+      </div>
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:0.8rem;color:#94a3b8;margin-bottom:4px">비밀번호 <span style="color:#64748b">(6자 이상)</span></label>
+        <input id="regPassword" type="password" placeholder="비밀번호" autocomplete="new-password"
+          style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:8px;padding:10px 14px;font-size:0.9rem">
+      </div>
+      <div style="margin-bottom:1.25rem">
+        <label style="display:block;font-size:0.8rem;color:#94a3b8;margin-bottom:4px">이메일 <span style="color:#64748b">(선택)</span></label>
+        <input id="regEmail" type="email" placeholder="이메일 (선택사항)" autocomplete="email"
+          style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:8px;padding:10px 14px;font-size:0.9rem"
+          onkeydown="if(event.key==='Enter')doRegister()">
+      </div>
+      <div id="registerError" style="color:#fca5a5;font-size:0.8rem;margin-bottom:0.75rem;display:none"></div>
+      <button onclick="doRegister()" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">
+        <i class="fas fa-user-plus"></i> 회원가입
+      </button>
+      <p style="text-align:center;margin-top:1rem;font-size:0.8rem;color:#64748b">
+        이미 계정이 있으신가요? <a href="#" onclick="switchAuthTab('login');return false" style="color:#34d399">로그인</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- 로그인 필요 배너 -->
+<div id="loginRequiredBanner" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8888;align-items:center;justify-content:center">
+  <div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:2rem;text-align:center;max-width:360px">
+    <div style="font-size:2.5rem;margin-bottom:1rem">🔐</div>
+    <h3 style="color:#f1f5f9;margin-bottom:0.5rem">로그인이 필요합니다</h3>
+    <p style="color:#94a3b8;font-size:0.875rem;margin-bottom:1.5rem">개인 연구 데이터 관리를 위해<br>로그인 또는 회원가입이 필요합니다</p>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <button onclick="openAuthModal('login')" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> 로그인</button>
+      <button onclick="openAuthModal('register')" class="btn" style="background:#334155;color:#f1f5f9"><i class="fas fa-user-plus"></i> 회원가입</button>
+    </div>
+  </div>
+</div>
 
 <!-- 탭 네비게이션 -->
 <nav>
@@ -912,21 +997,141 @@ const EDGE_COLORS = {
 // ════════════════════════════════════════
 //   초기화
 // ════════════════════════════════════════
-window.addEventListener('load', () => {
-  // API 키는 서버 환경변수(GSK_TOKEN)로 관리 — UI 입력 불필요
+// ════════════════════════════════════════
+//   인증 (JWT + localStorage)
+// ════════════════════════════════════════
+let _authToken = localStorage.getItem('phyto_token') || '';
+let _authUser  = localStorage.getItem('phyto_user')  || '';
+
+// axios 인터셉터 — 모든 요청에 Authorization 헤더 자동 주입
+axios.interceptors.request.use(cfg => {
+  if (_authToken) cfg.headers['Authorization'] = 'Bearer ' + _authToken;
+  return cfg;
+});
+axios.interceptors.response.use(
+  r => r,
+  err => {
+    if (err.response && err.response.status === 401) {
+      // 토큰 만료 → 로그아웃
+      logout(true);
+    }
+    return Promise.reject(err);
+  }
+);
+
+function openAuthModal(tab='login') {
+  document.getElementById('authModal').style.display = 'flex';
+  document.getElementById('loginRequiredBanner').style.display = 'none';
+  switchAuthTab(tab);
+}
+function closeAuthModal() {
+  document.getElementById('authModal').style.display = 'none';
+}
+function switchAuthTab(tab) {
+  document.getElementById('loginForm').style.display    = tab==='login'    ? '' : 'none';
+  document.getElementById('registerForm').style.display = tab==='register' ? '' : 'none';
+  document.getElementById('loginTabBtn').style.background    = tab==='login'    ? '#065f46' : 'none';
+  document.getElementById('loginTabBtn').style.color         = tab==='login'    ? '#34d399' : '#94a3b8';
+  document.getElementById('registerTabBtn').style.background = tab==='register' ? '#065f46' : 'none';
+  document.getElementById('registerTabBtn').style.color      = tab==='register' ? '#34d399' : '#94a3b8';
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl    = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  if (!username || !password) { errEl.textContent='사용자명과 비밀번호를 입력하세요.'; errEl.style.display=''; return; }
+  try {
+    const res = await axios.post(API+'/api/auth/login', { username, password });
+    setAuth(res.data.token, res.data.username);
+    closeAuthModal();
+    showToast(`✅ ${res.data.username}님, 환영합니다!`, 'success');
+    refreshAll();
+  } catch(e) {
+    errEl.textContent = e.response?.data?.detail || '로그인 실패';
+    errEl.style.display = '';
+  }
+}
+
+async function doRegister() {
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const email    = document.getElementById('regEmail').value.trim();
+  const errEl    = document.getElementById('registerError');
+  errEl.style.display = 'none';
+  if (!username || !password) { errEl.textContent='사용자명과 비밀번호를 입력하세요.'; errEl.style.display=''; return; }
+  try {
+    const res = await axios.post(API+'/api/auth/register', { username, password, email });
+    setAuth(res.data.token, res.data.username);
+    closeAuthModal();
+    showToast(`🌿 ${res.data.message}`, 'success');
+    refreshAll();
+  } catch(e) {
+    errEl.textContent = e.response?.data?.detail || '회원가입 실패';
+    errEl.style.display = '';
+  }
+}
+
+function setAuth(token, username) {
+  _authToken = token;
+  _authUser  = username;
+  localStorage.setItem('phyto_token', token);
+  localStorage.setItem('phyto_user', username);
+  // 헤더 UI 업데이트
+  document.getElementById('loginHeaderBtn').style.display = 'none';
+  document.getElementById('userInfo').style.display = 'flex';
+  document.getElementById('usernameBadge').textContent = '👤 ' + username;
+  document.getElementById('loginRequiredBanner').style.display = 'none';
+}
+
+function logout(auto=false) {
+  _authToken = '';
+  _authUser  = '';
+  localStorage.removeItem('phyto_token');
+  localStorage.removeItem('phyto_user');
+  document.getElementById('loginHeaderBtn').style.display = '';
+  document.getElementById('userInfo').style.display = 'none';
+  document.getElementById('loginRequiredBanner').style.display = 'flex';
+  if (!auto) showToast('로그아웃되었습니다', 'info');
+}
+
+function checkAuth() {
+  if (!_authToken) {
+    document.getElementById('loginRequiredBanner').style.display = 'flex';
+    return false;
+  }
+  return true;
+}
+
+function refreshAll() {
+  if (!_authToken) return;
   loadStats();
   loadPapers(1);
   loadGraph();
   loadPaperFilters();
+}
+
+// ════════════════════════════════════════
+//   초기화
+// ════════════════════════════════════════
+window.addEventListener('load', () => {
+  if (_authToken && _authUser) {
+    // 저장된 토큰 복원
+    setAuth(_authToken, _authUser);
+    refreshAll();
+  } else {
+    // 미로그인 → 로그인 배너
+    document.getElementById('loginRequiredBanner').style.display = 'flex';
+  }
 });
 
 // ════════════════════════════════════════
-//   API Key
+//   API Key (구버전 호환)
 // ════════════════════════════════════════
-// API 키는 서버 환경변수(GSK_TOKEN)로 관리 — UI 입력 불필요
-function getApiKey() { return ''; }  // 서버에서 GSK_TOKEN 사용
+function getApiKey() { return ''; }
 function handleApiKeyInput() {}
-function requireApiKey() { return true; }  // 항상 통과
+function requireApiKey() { return checkAuth(); }
 
 // ════════════════════════════════════════
 //   탭 전환
