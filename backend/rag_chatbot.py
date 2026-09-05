@@ -43,7 +43,7 @@ PubMed 논문 데이터베이스를 기반으로 정확하고 신뢰할 수 있�
 
 
 class RAGChatbot:
-    def __init__(self, openai_api_key: str, base_url: str = ""):
+    def __init__(self, openai_api_key: str, base_url: str = "", data_dir: str = ""):
         # Genspark 프록시 우선, 없으면 공식 OpenAI
         _base = base_url or os.environ.get("OPENAI_BASE_URL", "") or None
         # API 키 우선순위: GSK_TOKEN > OPENAI_API_KEY > UI 입력값
@@ -51,9 +51,26 @@ class RAGChatbot:
                  os.environ.get("OPENAI_API_KEY", "") or
                  openai_api_key)
         self.client = OpenAI(api_key=_key, base_url=_base)
+
+        # 사용자별 데이터 디렉토리 설정
+        if data_dir:
+            self.data_dir = Path(data_dir)
+        else:
+            self.data_dir = DATA_DIR
+
+        self.chroma_dir    = self.data_dir / "chroma_db"
+        self.abstracts_dir = self.data_dir / "abstracts"
+        self.graph_dir     = self.data_dir / "graph"
+
+        # 필요한 디렉토리 생성
+        self.chroma_dir.mkdir(parents=True, exist_ok=True)
+        self.abstracts_dir.mkdir(parents=True, exist_ok=True)
+        self.graph_dir.mkdir(parents=True, exist_ok=True)
+
         print(f"[RAGChatbot] base_url={_base!r}, key_prefix={_key[:8]}...")
+        print(f"[RAGChatbot] data_dir={self.data_dir}")
         self.chroma_client = chromadb.PersistentClient(
-            path=str(CHROMA_DIR)
+            path=str(self.chroma_dir)
         )
         self._init_collection()
     
