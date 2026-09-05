@@ -403,6 +403,13 @@ def crawl_phytochemical_papers(
         return {"papers": [], "total": 0, "meta_count": 0,
                 "new_count": 0, "query": query}
 
+    # 각 논문에 크롤링 출처 태그 추가
+    for p in papers:
+        if p:
+            p["phytochemical"] = phytochemical
+            if health_condition:
+                p["health_condition"] = health_condition
+
     existing_pmids = get_existing_pmids(_abs_dir)
     new_count = sum(1 for p in papers if p["pmid"] not in existing_pmids)
 

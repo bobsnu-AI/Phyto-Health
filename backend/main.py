@@ -327,6 +327,107 @@ async def get_paper_journals(current_user: dict = Depends(get_current_user)):
     return {"journals": [j for j,_ in sorted_j]}
 
 
+@app.get("/api/papers/filter-options")
+async def get_filter_options(current_user: dict = Depends(get_current_user)):
+    """삭제 필터용: 사용자 논문의 고유 phytochemical / health_condition 목록 반환"""
+    papers = load_all_papers_for_user(current_user["user_id"])
+    phytos = sorted({p.get("phytochemical","") for p in papers if p.get("phytochemical")})
+    healths = sorted({p.get("health_condition","") for p in papers if p.get("health_condition")})
+    return {"phytochemicals": phytos, "health_conditions": healths}
+
+
+@app.delete("/api/papers/{pmid}")
+async def delete_paper(pmid: str, current_user: dict = Depends(get_current_user)):
+    """단일 논문 삭제 (PMID 기준)"""
+    user_id = current_user["user_id"]
+    user_dir = get_user_data_dir(user_id)
+    abstracts_dir = user_dir / "abstracts"
+
+    deleted = 0
+    for ext in [".json", ".txt"]:
+        f = abstracts_dir / f"{pmid}{ext}"
+        if f.exists():
+            f.unlink()
+            deleted += 1
+
+    if deleted == 0:
+        raise HTTPException(404, f"논문 {pmid}을(를) 찾을 수 없습니다.")
+
+    # ChromaDB에서도 제거
+    try:
+        chatbot = get_chatbot(user_id)
+        chatbot.collection.delete(ids=[pmid])
+    except Exception:
+        pass
+
+    return {"deleted": 1, "pmid": pmid}
+
+
+class BulkDeleteRequest(BaseModel):
+    phytochemical: Optional[str] = None
+    health_condition: Optional[str] = None
+    pmids: Optional[list] = None  # 개별 복수 삭제용
+
+
+@app.delete("/api/papers")
+async def delete_papers_bulk(
+    request: BulkDeleteRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    일괄 삭제:
+    - pmids 목록 지정 → 해당 논문들만 삭제
+    - phytochemical 지정 → 해당 소재 논문 전체 삭제
+    - health_condition 지정 → 해당 기능성 논문 전체 삭제
+    - 둘 다 지정 → AND 조건으로 삭제
+    """
+    user_id = current_user["user_id"]
+    user_dir = get_user_data_dir(user_id)
+    abstracts_dir = user_dir / "abstracts"
+
+    papers = load_all_papers_for_user(user_id)
+    deleted_pmids = []
+
+    if request.pmids:
+        # 직접 pmid 목록 삭제
+        target_pmids = set(str(p) for p in request.pmids)
+        targets = [p for p in papers if str(p.get("pmid","")) in target_pmids]
+    else:
+        # 필터 조건으로 삭제
+        targets = papers
+        if request.phytochemical:
+            targets = [p for p in targets if p.get("phytochemical","").lower() == request.phytochemical.lower()]
+        if request.health_condition:
+            targets = [p for p in targets if p.get("health_condition","").lower() == request.health_condition.lower()]
+
+    if not targets:
+        return {"deleted": 0, "message": "삭제할 논문이 없습니다."}
+
+    for paper in targets:
+        pmid = str(paper.get("pmid",""))
+        if not pmid:
+            continue
+        for ext in [".json", ".txt"]:
+            f = abstracts_dir / f"{pmid}{ext}"
+            if f.exists():
+                f.unlink()
+        deleted_pmids.append(pmid)
+
+    # ChromaDB에서도 일괄 제거
+    if deleted_pmids:
+        try:
+            chatbot = get_chatbot(user_id)
+            chatbot.collection.delete(ids=deleted_pmids)
+        except Exception:
+            pass
+
+    return {
+        "deleted": len(deleted_pmids),
+        "pmids": deleted_pmids,
+        "message": f"{len(deleted_pmids)}편이 삭제되었습니다."
+    }
+
+
 # ─── Graph DB (사용자별) ──────────────────────────────────────────────────────
 
 @app.post("/api/graph/build")

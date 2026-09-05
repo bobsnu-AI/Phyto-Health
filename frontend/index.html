@@ -459,6 +459,58 @@
   </div>
 </div>
 
+<!-- ══════════════ 논문 삭제 모달 ══════════════ -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9990;align-items:center;justify-content:center">
+  <div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:2rem;width:460px;max-width:92vw;position:relative">
+    <button onclick="closeDeleteModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:#94a3b8;font-size:1.2rem;cursor:pointer">✕</button>
+    <h3 style="color:#fca5a5;margin-bottom:0.3rem"><i class="fas fa-trash-alt"></i> 논문 삭제</h3>
+    <p style="color:#94a3b8;font-size:0.82rem;margin-bottom:1.2rem">소재·기능성 조건으로 일괄 삭제하거나, PMID를 직접 입력해 삭제합니다.</p>
+
+    <!-- 탭 -->
+    <div style="display:flex;gap:0;margin-bottom:1.2rem;background:#0f172a;border-radius:10px;padding:4px">
+      <button id="deleteTabBulk" onclick="switchDeleteTab('bulk')"
+        style="flex:1;padding:7px;border:none;border-radius:8px;background:#7f1d1d;color:#fca5a5;font-weight:600;cursor:pointer;font-size:0.82rem">🗂 조건 일괄 삭제</button>
+      <button id="deleteTabSingle" onclick="switchDeleteTab('single')"
+        style="flex:1;padding:7px;border:none;border-radius:8px;background:none;color:#94a3b8;font-weight:600;cursor:pointer;font-size:0.82rem">🔢 PMID 직접 삭제</button>
+    </div>
+
+    <!-- 조건 일괄 삭제 -->
+    <div id="deletePanelBulk">
+      <div style="margin-bottom:0.9rem">
+        <label style="display:block;font-size:0.78rem;color:#94a3b8;margin-bottom:4px">🌿 소재 (파이토케미컬)</label>
+        <select id="deletePhytoSelect" class="select" style="width:100%">
+          <option value="">전체 (조건 없음)</option>
+        </select>
+      </div>
+      <div style="margin-bottom:1.2rem">
+        <label style="display:block;font-size:0.78rem;color:#94a3b8;margin-bottom:4px">❤️ 기능성 (건강 조건)</label>
+        <select id="deleteHealthSelect" class="select" style="width:100%">
+          <option value="">전체 (조건 없음)</option>
+        </select>
+      </div>
+      <div id="deletePreviewBox" style="display:none;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:0.7rem;margin-bottom:1rem;font-size:0.8rem;color:#94a3b8"></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="previewBulkDelete()" class="btn btn-secondary btn-sm" style="flex:1"><i class="fas fa-eye"></i> 미리 보기</button>
+        <button onclick="confirmBulkDelete()" class="btn btn-sm" style="flex:1;background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b"><i class="fas fa-trash-alt"></i> 삭제 실행</button>
+      </div>
+    </div>
+
+    <!-- PMID 직접 삭제 -->
+    <div id="deletePanelSingle" style="display:none">
+      <div style="margin-bottom:0.9rem">
+        <label style="display:block;font-size:0.78rem;color:#94a3b8;margin-bottom:4px">PMID 입력 (쉼표 또는 줄바꿈으로 구분)</label>
+        <textarea id="deletePmidInput" rows="5" class="input" style="width:100%;resize:vertical;font-family:monospace;font-size:0.82rem" placeholder="예: 12345678&#10;87654321&#10;또는 12345678, 87654321"></textarea>
+      </div>
+      <button onclick="confirmPmidDelete()" class="btn btn-sm" style="width:100%;background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b">
+        <i class="fas fa-trash-alt"></i> 입력한 PMID 삭제
+      </button>
+    </div>
+
+    <!-- 결과 메시지 -->
+    <div id="deleteResultMsg" style="display:none;margin-top:1rem;padding:0.7rem;border-radius:8px;font-size:0.83rem;text-align:center"></div>
+  </div>
+</div>
+
 <!-- 로그인 필요 배너 -->
 <div id="loginRequiredBanner" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8888;align-items:center;justify-content:center">
   <div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:2rem;text-align:center;max-width:360px">
@@ -667,6 +719,9 @@
         </button>
         <button class="btn btn-accent btn-sm" onclick="startBuildGraph()">
           <i class="fas fa-project-diagram"></i> 그래프 구축
+        </button>
+        <button class="btn btn-sm" style="background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b" onclick="openDeleteModal()">
+          <i class="fas fa-trash-alt"></i> 논문 삭제
         </button>
       </div>
     </div>
@@ -1342,8 +1397,15 @@ async function loadPapers(page = 1) {
         </div>` +
         papers.map((p,i) => `
           <div class="paper-card" id="pc-${i}">
-            <div class="paper-title">
-              <a href="${p.url}" target="_blank" style="color:var(--text);text-decoration:none">${escapeHtml(p.title||'제목 없음')}</a>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div class="paper-title" style="flex:1">
+                <a href="${p.url}" target="_blank" style="color:var(--text);text-decoration:none">${escapeHtml(p.title||'제목 없음')}</a>
+              </div>
+              <button onclick="deleteSinglePaper('${p.pmid}','pc-${i}')" title="이 논문 삭제"
+                style="flex-shrink:0;background:transparent;border:1px solid #7f1d1d;color:#fca5a5;border-radius:5px;padding:3px 8px;font-size:0.72rem;cursor:pointer;transition:background 0.2s"
+                onmouseover="this.style.background='#7f1d1d'" onmouseout="this.style.background='transparent'">
+                <i class="fas fa-trash-alt"></i>
+              </button>
             </div>
             <div class="paper-meta">
               ${p.is_meta_analysis?'<span class="badge badge-meta">🔬 메타분석</span>':''}
@@ -1351,6 +1413,8 @@ async function loadPapers(page = 1) {
               ${(p.pub_types||[]).some(pt=>pt.includes('randomized'))?'<span class="badge badge-rct">🧪 RCT</span>':''}
               <span class="badge badge-year">${p.year||''}</span>
               ${p.journal?`<span class="badge badge-journal">${escapeHtml(p.journal.substring(0,35))}</span>`:''}
+              ${p.phytochemical?`<span class="badge" style="background:#1e3a5f;color:#93c5fd">🌿 ${escapeHtml(p.phytochemical)}</span>`:''}
+              ${p.health_condition?`<span class="badge" style="background:#1a3a2a;color:#6ee7b7">❤️ ${escapeHtml(p.health_condition)}</span>`:''}
               <a href="${p.url}" target="_blank" class="source-link">PMID:${p.pmid}</a>
             </div>
             <div class="paper-abstract">${escapeHtml((p.abstract||'초록 없음').substring(0,300))}${(p.abstract||'').length>300?'...':''}</div>
@@ -1384,6 +1448,166 @@ function clearPaperFilters() {
   document.getElementById('sortFilter').value = 'year';
   loadPapers(1);
 }
+
+// ─── 논문 삭제 기능 ────────────────────────────────────────────────────────
+
+async function openDeleteModal() {
+  const modal = document.getElementById('deleteModal');
+  modal.style.display = 'flex';
+  document.getElementById('deleteResultMsg').style.display = 'none';
+  document.getElementById('deletePreviewBox').style.display = 'none';
+  document.getElementById('deletePmidInput').value = '';
+  switchDeleteTab('bulk');
+
+  // 소재/기능성 옵션 로드
+  try {
+    const res = await axios.get('/api/papers/filter-options');
+    const { phytochemicals, health_conditions } = res.data;
+    const phytoSel = document.getElementById('deletePhytoSelect');
+    const healthSel = document.getElementById('deleteHealthSelect');
+    phytoSel.innerHTML = '<option value="">전체 (조건 없음)</option>' +
+      phytochemicals.map(p => `<option value="${p}">${p}</option>`).join('');
+    healthSel.innerHTML = '<option value="">전체 (조건 없음)</option>' +
+      health_conditions.map(h => `<option value="${h}">${h}</option>`).join('');
+  } catch(e) {
+    console.error('필터 옵션 로드 오류:', e);
+  }
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+function switchDeleteTab(tab) {
+  const isBulk = tab === 'bulk';
+  document.getElementById('deletePanelBulk').style.display  = isBulk ? 'block' : 'none';
+  document.getElementById('deletePanelSingle').style.display = isBulk ? 'none'  : 'block';
+  document.getElementById('deleteTabBulk').style.background  = isBulk ? '#7f1d1d' : 'none';
+  document.getElementById('deleteTabBulk').style.color       = isBulk ? '#fca5a5' : '#94a3b8';
+  document.getElementById('deleteTabSingle').style.background = isBulk ? 'none' : '#7f1d1d';
+  document.getElementById('deleteTabSingle').style.color      = isBulk ? '#94a3b8' : '#fca5a5';
+  document.getElementById('deleteResultMsg').style.display = 'none';
+}
+
+async function previewBulkDelete() {
+  const phyto  = document.getElementById('deletePhytoSelect').value;
+  const health = document.getElementById('deleteHealthSelect').value;
+  const box = document.getElementById('deletePreviewBox');
+
+  if (!phyto && !health) {
+    box.style.display = 'block';
+    box.style.borderColor = '#f59e0b';
+    box.innerHTML = '⚠️ 소재 또는 기능성 조건을 하나 이상 선택하세요.<br><span style="color:#ef4444">조건 없이 실행하면 전체 논문이 삭제됩니다.</span>';
+    return;
+  }
+
+  try {
+    // 미리보기: 실제로는 GET 논문 목록으로 조건 카운트
+    const params = { limit: 1000 };
+    if (phyto)  params.phytochemical   = phyto;
+    if (health) params.health_condition = health;
+
+    // 전체 논문 가져와서 클라이언트 필터
+    const res = await axios.get('/api/papers', { params: { limit: 9999 } });
+    let papers = res.data.papers || [];
+    if (phyto)  papers = papers.filter(p => (p.phytochemical||'').toLowerCase() === phyto.toLowerCase());
+    if (health) papers = papers.filter(p => (p.health_condition||'').toLowerCase() === health.toLowerCase());
+
+    box.style.display = 'block';
+    box.style.borderColor = papers.length > 0 ? '#f59e0b' : '#334155';
+    if (papers.length === 0) {
+      box.innerHTML = '검색 결과: 해당 조건의 논문이 없습니다.';
+    } else {
+      box.innerHTML = `🔍 삭제 예정: <strong style="color:#fca5a5">${papers.length}편</strong>
+        ${phyto ? `<br>· 소재: <span style="color:#93c5fd">${phyto}</span>` : ''}
+        ${health ? `<br>· 기능성: <span style="color:#6ee7b7">${health}</span>` : ''}
+        <br><br><span style="color:#64748b;font-size:0.75rem">${papers.slice(0,3).map(p=>escapeHtml(p.title||'').substring(0,60)+'...').join('<br>')}</span>`;
+    }
+  } catch(e) {
+    box.style.display = 'block';
+    box.innerHTML = '미리보기 오류: ' + e.message;
+  }
+}
+
+async function confirmBulkDelete() {
+  const phyto  = document.getElementById('deletePhytoSelect').value;
+  const health = document.getElementById('deleteHealthSelect').value;
+  const msg    = document.getElementById('deleteResultMsg');
+
+  if (!phyto && !health) {
+    if (!confirm('⚠️ 조건이 없습니다. 모든 논문을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+  } else {
+    const condStr = [phyto && `소재: ${phyto}`, health && `기능성: ${health}`].filter(Boolean).join(', ');
+    if (!confirm(`다음 조건의 논문을 삭제합니다:\n${condStr}\n\n계속하시겠습니까?`)) return;
+  }
+
+  try {
+    const body = {};
+    if (phyto)  body.phytochemical   = phyto;
+    if (health) body.health_condition = health;
+
+    const res = await axios.delete('/api/papers', { data: body });
+    const { deleted, message } = res.data;
+    msg.style.display = 'block';
+    msg.style.background = deleted > 0 ? '#14532d' : '#1e293b';
+    msg.style.color = deleted > 0 ? '#86efac' : '#94a3b8';
+    msg.innerHTML = `✅ ${message}`;
+    if (deleted > 0) {
+      setTimeout(() => { closeDeleteModal(); loadPapers(1); updateStats(); }, 1500);
+    }
+  } catch(e) {
+    msg.style.display = 'block';
+    msg.style.background = '#450a0a';
+    msg.style.color = '#fca5a5';
+    msg.innerHTML = '❌ 삭제 오류: ' + (e.response?.data?.detail || e.message);
+  }
+}
+
+async function confirmPmidDelete() {
+  const raw  = document.getElementById('deletePmidInput').value.trim();
+  const msg  = document.getElementById('deleteResultMsg');
+  if (!raw) { alert('PMID를 입력하세요.'); return; }
+
+  const pmids = raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+  if (pmids.length === 0) { alert('유효한 PMID가 없습니다.'); return; }
+
+  if (!confirm(`${pmids.length}편의 논문을 삭제합니다.\n계속하시겠습니까?`)) return;
+
+  try {
+    const res = await axios.delete('/api/papers', { data: { pmids } });
+    const { deleted, message } = res.data;
+    msg.style.display = 'block';
+    msg.style.background = deleted > 0 ? '#14532d' : '#1e293b';
+    msg.style.color = deleted > 0 ? '#86efac' : '#94a3b8';
+    msg.innerHTML = `✅ ${message}`;
+    if (deleted > 0) {
+      setTimeout(() => { closeDeleteModal(); loadPapers(1); updateStats(); }, 1500);
+    }
+  } catch(e) {
+    msg.style.display = 'block';
+    msg.style.background = '#450a0a';
+    msg.style.color = '#fca5a5';
+    msg.innerHTML = '❌ 삭제 오류: ' + (e.response?.data?.detail || e.message);
+  }
+}
+
+async function deleteSinglePaper(pmid, cardId) {
+  if (!confirm(`PMID ${pmid} 논문을 삭제하시겠습니까?`)) return;
+  try {
+    await axios.delete(`/api/papers/${pmid}`);
+    const card = document.getElementById(cardId);
+    if (card) {
+      card.style.transition = 'opacity 0.3s, transform 0.3s';
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(-20px)';
+      setTimeout(() => { card.remove(); updateStats(); }, 300);
+    }
+  } catch(e) {
+    alert('삭제 오류: ' + (e.response?.data?.detail || e.message));
+  }
+}
+
+// ─── 논문 삭제 기능 끝 ────────────────────────────────────────────────────
 function toggleAbstract(btn, cardId, fullAbstract) {
   const card = document.getElementById(cardId);
   if (card.classList.toggle('expanded')) {
