@@ -26,8 +26,13 @@ _env_data = os.environ.get("DATA_DIR", "")
 ROOT_DATA_DIR = Path(_env_data) if _env_data else Path(__file__).parent.parent / "data"
 ROOT_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-# 사용자 DB 경로 (공유 — 계정 정보만)
-USERS_DB_PATH = ROOT_DATA_DIR / "users.db"
+# users.db 경로: USERS_DB_DIR 환경변수 우선 → DATA_DIR → 앱 내부 data/
+_env_users_db_dir = os.environ.get("USERS_DB_DIR", "")
+_users_db_base = Path(_env_users_db_dir) if _env_users_db_dir else ROOT_DATA_DIR
+_users_db_base.mkdir(parents=True, exist_ok=True)
+
+# 사용자 DB 경로 (계정 정보만 저장 — Volume에 보관해야 재배포 후에도 유지)
+USERS_DB_PATH = _users_db_base / "users.db"
 
 # Seed 데이터 경로 (신규 사용자에게 복사할 초기 데이터)
 SEED_DATA_DIR = Path(__file__).parent.parent / "data"
